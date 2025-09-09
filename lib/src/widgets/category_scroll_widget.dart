@@ -4,7 +4,6 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/simple/get_state.dart';
 import 'package:iam/src/widgets/small_text.dart';
 
-
 import '../constants/colors.dart';
 import '../controllers/category_product_controller.dart';
 import '../model/category_product_model.dart';
@@ -17,7 +16,6 @@ import 'expandable_text_widget.dart';
 import 'interactive_favourite_button_widget.dart';
 
 class CategoryScrollWidget extends StatefulWidget {
-
   const CategoryScrollWidget({super.key});
 
   @override
@@ -41,10 +39,8 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
         _currentPageValue = pageController.page!;
       });
     });
-    // Initialize isFavorite and onFavorite here
-    isFavorite = false; // Set to true if the item is favorited
+    isFavorite = false;
     onFavorite = () {
-      // Define what happens when the favorite state changes
       setState(() {
         isFavorite = !isFavorite;
       });
@@ -57,7 +53,6 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
     super.dispose();
   }
 
-  // Helper function to get full image URL
   String getFullImageUrl(String? imagePath) {
     if (imagePath == null || imagePath.isEmpty) return "";
     if (imagePath.startsWith("http")) return imagePath;
@@ -66,7 +61,6 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
 
   @override
   Widget build(BuildContext context) {
-
     return GetBuilder<CategoryProductController>(builder: (categoryProducts) {
       return categoryProducts.isLoaded
           ? SizedBox(
@@ -76,10 +70,8 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
           itemCount: categoryProducts.categoryProductList.length,
           itemBuilder: (context, position) {
             final categoryProduct = categoryProducts.categoryProductList[position];
-            // Initialize isFavorite and onFavorite for each item
             bool itemIsFavorite = categoryProduct.isFavorite ?? false;
             itemOnFavorite() {
-              // Define what happens when the favorite state changes for this item
               CategoryProductController categoryProductController = Get.find<CategoryProductController>();
               if (itemIsFavorite) {
                 //categoryProductController.removeFromWishlist(categoryProduct);
@@ -149,9 +141,12 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              height: Dimensions.pageViewTextContainer,
+              height: Dimensions.pageViewTextContainer+20,
               margin: EdgeInsets.only(
-              left: Dimensions.width30, right: Dimensions.width30, bottom: Dimensions.height30),
+                left: Dimensions.width30,
+                right: Dimensions.width30,
+                bottom: Dimensions.height15, // <-- Add extra space here
+              ),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(Dimensions.radius20),
                 color: AppColors.gradient2,
@@ -162,42 +157,100 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
                 ],
               ),
               child: Padding(
-                padding: EdgeInsets.only(left: Dimensions.width10, right: Dimensions.width10, top: Dimensions.height15-10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: BigText(text: categoryProduct.name ?? "No Name", color: AppColors.white,),
-                        ),
-                        InteractiveFavoriteButton(isFavorite: isFavorite, onToggle: onFavorite, activeColor: AppColors.orangeColor, inactiveColor: AppColors.iSecondaryColor),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Row(children: [
-                      Icon(Icons.star_rounded, color: Colors.amber, size: 18),
-                      const SizedBox(width: 4),
-                      SmallText(text: categoryProduct.rating != null ? categoryProduct.rating!.toStringAsFixed(1) :'no rating', color: AppColors.white,),
-                      const SizedBox(width: 10),
-                      Icon(Icons.local_fire_department, color: Colors.deepOrange, size: 16),
-                      const SizedBox(width: 4),
-                      SmallText(text: 'Trending', color: AppColors.white,),
-                    ]),
-                    Container(
-                      padding: EdgeInsets.symmetric(vertical: Dimensions.height15-10, horizontal: 5),
-                      child: Column(
+                padding: EdgeInsets.only(
+                  left: Dimensions.width10,
+                  right: Dimensions.width10,
+                  top: Dimensions.height15 - 10,
+
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          AppColumn(
-                            text: categoryProduct.description ?? 'No description available.',
-
+                          Expanded(
+                            child: BigText(
+                              text: categoryProduct.name ?? "No Name",
+                              color: AppColors.white,
+                            ),
                           ),
-
+                          InteractiveFavoriteButton(
+                            isFavorite: isFavorite,
+                            onToggle: onFavorite,
+                            activeColor: AppColors.orangeColor,
+                            inactiveColor: AppColors.iSecondaryColor,
+                          ),
                         ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Icon(Icons.star_rounded, color: Colors.amber, size: 12),
+                          const SizedBox(width: 4),
+                          SmallText(
+                            text: categoryProduct.rating != null
+                                ? categoryProduct.rating!.toStringAsFixed(1)
+                                : 'no rating',
+                            color: AppColors.white,
+                          ),
+                          const SizedBox(width: 10),
+                          Icon(Icons.local_fire_department, color: Colors.deepOrange, size: 16),
+                          const SizedBox(width: 4),
+                          SmallText(text: 'Trending', color: AppColors.white),
+                        ],
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                            vertical: Dimensions.height15 - 10, horizontal: 5),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AppColumn(
+                              text: categoryProduct.description ?? 'No description available.',
+                            ),
+
+                            // ADDED: Padding around the Row to create space below it
+                            Padding(
+                              padding: EdgeInsets.only(bottom: Dimensions.height45), // Space below the row
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.orangeColor ?? Colors.orange,
+                                      borderRadius: BorderRadius.circular(50),
+                                    ),
+                                    child: BigText(
+                                      text: 'Popular',
+                                      size: 12,
+                                      color: AppColors.mainBlackColor ?? Colors.black,
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.orangeColor ?? Colors.orange,
+                                      borderRadius: BorderRadius.circular(50),
+                                    ),
+                                    child: BigText(
+                                      text: 'Recommended',
+                                      size: 12,
+                                      color: AppColors.mainBlackColor ?? Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

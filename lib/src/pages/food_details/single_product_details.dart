@@ -61,7 +61,7 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
   Widget build(BuildContext context) {
     var controller = Get.find<SingleProductController>();
 
-    // ADDED: Check if data is loaded and index is valid
+    // ADDED: Check if data is loaded
     if (!controller.isLoaded) {
       return Scaffold(
         backgroundColor: AppColors.bg2Color,
@@ -69,8 +69,19 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
       );
     }
 
-    // FIXED: Add bounds checking for the pageId
-    if (widget.pageId < 0 || widget.pageId >= controller.singleProductList.length) {
+    // FIXED: Find product by ID instead of using pageId as index
+    SingleProductModel? product;
+    try {
+      product = controller.singleProductList.firstWhere(
+            (p) => p.id == widget.pageId,
+        orElse: () => SingleProductModel(), // Return empty product if not found
+      );
+    } catch (e) {
+      print('Error finding product: $e');
+    }
+
+    // Check if product was found and has an ID
+    if (product == null || product.id == null) {
       return Scaffold(
         backgroundColor: AppColors.bg2Color,
         body: Center(
@@ -91,7 +102,6 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
       );
     }
 
-    var product = controller.singleProductList[widget.pageId];
     double price = product.price ?? 0.0;
     String imageUrl = getFullImageUrl(product.image);
     bool hasValidImage = imageUrl.isNotEmpty;
@@ -324,7 +334,7 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
                           ),
                           SizedBox(width: Dimensions.width10),
                           GestureDetector(
-                            onTap: () => _addToWishlist(product),
+                            onTap: () => _addToWishlist(product!),
                             child: HelperIcon(
                               icon: Icons.favorite_border,
                               size: Dimensions.iconSize16,
@@ -353,7 +363,7 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
         padding: EdgeInsets.all(Dimensions.height20),
         color: AppColors.iPrimaryColor,
         child: ElevatedButton(
-          onPressed: () => _addToCart(product),
+          onPressed: () => _addToCart(product!),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.black,
             shape: RoundedRectangleBorder(

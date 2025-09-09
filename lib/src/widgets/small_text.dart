@@ -27,6 +27,8 @@ class SmallText extends StatelessWidget {
         fontSize: size,
         height: height,
       ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }

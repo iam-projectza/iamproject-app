@@ -1,4 +1,3 @@
-
 import 'dart:collection';
 import 'dart:io';
 
@@ -7,17 +6,17 @@ import 'package:get/get.dart';
 
 import '../constants/colors.dart';
 import '../data/repository/category_product_repo.dart';
+
+import '../helper/services/category_service.dart';
 import '../model/category_product_model.dart';
 import '../routes/route_helper.dart';
 import '../utils/app_constants.dart';
-import '../utils/precache_image_with_timeout.dart';
-import 'package:async/async.dart' as async_package;
+
 class CategoryProductController extends GetxController {
   final CategoryProductRepo categoryProductRepo;
 
   CategoryProductController({required this.categoryProductRepo});
 
-  //FIXED: Use correct type here
   List<CategoryModel> _categoryProductList = [];
   List<CategoryModel> get categoryProductList => _categoryProductList;
 
@@ -40,7 +39,6 @@ class CategoryProductController extends GetxController {
   Future<void> precacheImageWithTimeout(String imageUrl, BuildContext context) async {
     final HttpClient httpClient = HttpClient();
     httpClient.connectionTimeout = const Duration(seconds: 60);
-
     try {
       final imageProvider = NetworkImage(imageUrl);
       await precacheImage(imageProvider, context);
@@ -69,14 +67,16 @@ class CategoryProductController extends GetxController {
         if (responseData.containsKey('data')) {
           List<dynamic> dataList = responseData['data'];
 
-          //FIXED: Assigning correctly to List<CategoryModel>
           _categoryProductList = dataList
               .map((item) => CategoryModel.fromJson(item))
               .toList();
 
           _isLoaded = true;
 
-          // Preload images with concurrency
+          // ADD THIS: Load categories into the service
+          final categoryService = Get.find<CategoryService>();
+          categoryService.loadCategories(_categoryProductList);
+
           await preloadImagesWithConcurrency(_categoryProductList);
         } else {
           print("Invalid response structure: 'data' key is missing.");
@@ -90,21 +90,16 @@ class CategoryProductController extends GetxController {
       print("Error fetching category product list: $e");
       _isLoaded = false;
     }
-
-    update(); // Notify UI
+    update();
   }
 
-
-
-  /// Preloads images with retry logic and limits concurrent requests
   Future<void> preloadImagesWithConcurrency(List<CategoryModel> categoryProducts) async {
-    int maxConcurrentRequests = 3; // Reduced from 5 to 3
+    int maxConcurrentRequests = 3;
     Queue<CategoryModel> queue = Queue.from(categoryProducts);
     List<Future<void>> activeTasks = [];
 
     Future<void> preloadNext() async {
       if (queue.isEmpty) return;
-
       final product = queue.removeFirst();
 
       try {
@@ -116,39 +111,35 @@ class CategoryProductController extends GetxController {
       } catch (e) {
         print(" Failed to preload image: $e");
       }
-
-      await preloadNext(); // Recursively go to the next image
+      await preloadNext();
     }
 
-    // Start up to [maxConcurrentRequests] preload tasks
     for (int i = 0; i < maxConcurrentRequests && queue.isNotEmpty; i++) {
       activeTasks.add(preloadNext());
     }
-
-    // Wait until all tasks are finished
     await Future.wait(activeTasks);
   }
 
-
   Future<void> precacheImageWithRetry(String imageUrl, BuildContext context) async {
-    int retries = 3; // Maximum number of retries
+    int retries = 3;
     while (retries > 0) {
       try {
         final imageProvider = NetworkImage(imageUrl);
         await precacheImage(imageProvider, context);
         print("Successfully preloaded image: $imageUrl");
-        return; // Exit if successful
+        return;
       } catch (e) {
         retries--;
         if (retries == 0) {
           print(" Failed to preload image after multiple attempts: $imageUrl");
         } else {
           print(" Retrying image preload ($retries attempts left): $imageUrl");
-          await Future.delayed(Duration(milliseconds: 500)); // Add a small delay before retrying
+          await Future.delayed(Duration(milliseconds: 500));
         }
       }
     }
   }
+
   void addToWishlist(CategoryModel product) {
     if (!_wishlist.contains(product)) {
       _wishlist.add(product);
