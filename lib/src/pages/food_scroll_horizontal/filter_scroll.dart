@@ -4,6 +4,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../constants/colors.dart';
 import '../../controllers/category_product_controller.dart';
+import '../../controllers/single_product_controller.dart';
 import '../../utils/app_constants.dart';
 
 class FilterScroll extends StatelessWidget {
@@ -17,6 +18,9 @@ class FilterScroll extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get the SingleProductController instance
+    final singleProductController = Get.find<SingleProductController>();
+
     return GetBuilder<CategoryProductController>(builder: (controller) {
       if (!controller.isLoaded) {
         return SizedBox(
@@ -95,17 +99,22 @@ class FilterScroll extends StatelessWidget {
           itemBuilder: (context, index) {
             // First item is the "All" button
             if (index == 0) {
+              final isAllSelected = singleProductController.isAllSelected();
+
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5), // Added vertical padding
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
                 child: GestureDetector(
                   onTap: () {
-                    // Handle "All" filter selection
+                    // Handle "All" filter selection - show all products
+                    singleProductController.resetFilter();
                   },
                   child: Container(
-                    height: 45, // Slightly reduced container height
+                    height: 45,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(50),
-                      color: AppColors.orangeColor, // Red background for active state
+                      color: isAllSelected
+                          ? AppColors.orangeColor // Selected state
+                          : AppColors.white, // Default state
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.1),
@@ -120,12 +129,14 @@ class FilterScroll extends StatelessWidget {
                       children: [
                         // Custom image for "All" button
                         Container(
-                          width: 35, // Slightly reduced size
-                          height: 35, // Slightly reduced size
-                          margin: const EdgeInsets.only(left: 12), // Adjusted margin
+                          width: 35,
+                          height: 35,
+                          margin: const EdgeInsets.only(left: 12),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(50),
-                            color: Colors.white.withOpacity(0.3), // Semi-transparent white
+                            color: isAllSelected
+                                ? Colors.white.withOpacity(0.3)
+                                : Colors.grey[300],
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.1),
@@ -138,26 +149,26 @@ class FilterScroll extends StatelessWidget {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(50),
                             child: Image.asset(
-                              'assets/icons/icons.png', // Your custom image path
+                              'assets/icons/icons.png',
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return Icon(
-                                  Icons.all_inclusive, // Fallback icon
-                                  size: 18, // Slightly smaller icon
-                                  color: Colors.white,
+                                  Icons.all_inclusive,
+                                  size: 18,
+                                  color: isAllSelected ? Colors.white : Colors.grey[600],
                                 );
                               },
                             ),
                           ),
                         ),
-                        const SizedBox(width: 6), // Reduced spacing
+                        const SizedBox(width: 6),
                         // "All" text
-                        const Padding(
-                          padding: EdgeInsets.only(left: 8, right: 16), // Adjusted padding
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8, right: 16),
                           child: Text(
                             'All',
                             style: TextStyle(
-                              color: Colors.white, // White text for better contrast on red
+                              color: isAllSelected ? Colors.white : AppColors.mainBlackColor,
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                             ),
@@ -174,18 +185,22 @@ class FilterScroll extends StatelessWidget {
             final categoryIndex = index - 1;
             final category = controller.categoryProductList[categoryIndex];
             final imageUrl = getFullImageUrl(category.image);
+            final isCategorySelected = singleProductController.isCategorySelected(category.id!);
 
             return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5), // Added vertical padding
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
               child: GestureDetector(
                 onTap: () {
-                  // Handle category selection
+                  // Handle category selection - filter products by this category
+                  singleProductController.filterProductsByCategory(category.id, category.name!);
                 },
                 child: Container(
-                  height: 45, // Slightly reduced container height
+                  height: 45,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(50),
-                    color: AppColors.white,
+                    color: isCategorySelected
+                        ? AppColors.orangeColor // Selected state
+                        : AppColors.white, // Default state
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
@@ -200,12 +215,14 @@ class FilterScroll extends StatelessWidget {
                     children: [
                       // Image container
                       Container(
-                        width: 35, // Slightly reduced size
-                        height: 35, // Slightly reduced size
-                        margin: const EdgeInsets.only(left: 6), // Adjusted margin
+                        width: 35,
+                        height: 35,
+                        margin: const EdgeInsets.only(left: 6),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(50),
-                          color: Colors.grey[300],
+                          color: isCategorySelected
+                              ? Colors.white.withOpacity(0.3)
+                              : Colors.grey[300],
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.4),
@@ -224,26 +241,26 @@ class FilterScroll extends StatelessWidget {
                             errorBuilder: (context, error, stackTrace) {
                               return Icon(
                                 Icons.fastfood,
-                                size: 18, // Slightly smaller icon
-                                color: Colors.grey[600],
+                                size: 18,
+                                color: isCategorySelected ? Colors.white : Colors.grey[600],
                               );
                             },
                           )
                               : Icon(
                             Icons.fastfood,
-                            size: 18, // Slightly smaller icon
-                            color: Colors.grey[600],
+                            size: 18,
+                            color: isCategorySelected ? Colors.white : Colors.grey[600],
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6), // Reduced spacing
+                      const SizedBox(width: 6),
                       // Category name
                       Padding(
                         padding: const EdgeInsets.only(right: 12),
                         child: Text(
                           category.name ?? 'No Name',
                           style: TextStyle(
-                            color: AppColors.mainBlackColor,
+                            color: isCategorySelected ? Colors.white : AppColors.mainBlackColor,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),

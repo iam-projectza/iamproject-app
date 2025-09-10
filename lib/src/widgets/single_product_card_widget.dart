@@ -27,237 +27,116 @@ class SingleProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use getters directly since Dimensions now uses getters
     final width20 = Dimensions.width20;
     final height15 = Dimensions.height15;
     final height10 = Dimensions.height10;
-    final radius15 = Dimensions.radius15;
+    final radius20 = Dimensions.radius20;
     final listViewImgSize = Dimensions.listViewImgSize;
-    final iconSize24 = Dimensions.iconSize24;
+    final iconSize20 = Dimensions.iconSize24;
     final font16 = Dimensions.font16;
     final font14 = Dimensions.font16;
 
     // If loading, show shimmer effect
     if (isLoading) {
       return Container(
-        width: double.infinity,
-        padding: EdgeInsets.only(
-          top: Dimensions.height15,
-          right: Dimensions.width10,
-        ),
+        margin: EdgeInsets.only(bottom: height15),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(radius15),
+          borderRadius: BorderRadius.circular(radius20),
           boxShadow: [
             BoxShadow(
-              color: (AppColors.iSecondaryColor ?? Colors.orange).withOpacity(0.2),
-              blurRadius: 5,
-              offset: const Offset(0, 3),
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              spreadRadius: 2,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
         child: Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
+          baseColor: Colors.grey[200]!,
           highlightColor: Colors.grey[100]!,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Popular tag and category shimmer
-              Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    margin: EdgeInsets.only(left: 20),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    child: Container(
-                      width: 60,
-                      height: 14,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Gap(15),
-                  Container(
-                    width: 80,
-                    height: 14,
-                    color: Colors.white,
-                  ),
-                ],
-              ),
-              Gap(height10),
-
-              // Product row (image + details) shimmer
-              Row(
-                children: [
-                  // Product Image shimmer
-                  Container(
-                    width: listViewImgSize,
-                    height: listViewImgSize,
-                    margin: EdgeInsets.all(Dimensions.width10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(radius15),
-                      color: Colors.grey[300],
-                    ),
-                  ),
-
-                  // Product Details shimmer
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: Dimensions.height10,
-                        horizontal: Dimensions.width10,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Restaurant Name shimmer
-                          Container(
-                            width: 150,
-                            height: 18,
-                            color: Colors.white,
-                          ),
-                          Gap(height10),
-
-                          // Subtitle shimmer
-                          Container(
-                            width: double.infinity,
-                            height: 14,
-                            color: Colors.white,
-                          ),
-                          Gap(height10),
-
-                          // Rating, Delivery Info, Wishlist Icon shimmer
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              // Rating + Delivery shimmer
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 24,
-                                      height: 24,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.grey[300],
-                                      ),
-                                    ),
-                                    Gap(width20 / 4),
-                                    Container(
-                                      width: 20,
-                                      height: 14,
-                                      color: Colors.white,
-                                    ),
-                                    Gap(width20 / 2),
-                                    Container(
-                                      width: 24,
-                                      height: 24,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.grey[300],
-                                      ),
-                                    ),
-                                    Gap(width20 / 4),
-                                    Container(
-                                      width: 40,
-                                      height: 14,
-                                      color: Colors.white,
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              // Wishlist Button shimmer
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 24,
-                                    height: 24,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.grey[300],
-                                    ),
-                                  ),
-                                  Gap(width20 / 4),
-                                  Container(
-                                    width: 50,
-                                    height: 14,
-                                    color: Colors.white,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              // Tags container at the bottom shimmer
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.only(left: 12, right: 12, bottom: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(radius15),
-                    bottomRight: Radius.circular(radius15),
+          child: Padding(
+            padding: EdgeInsets.all(width20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Image shimmer
+                Container(
+                  width: double.infinity,
+                  height: 220,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(radius20),
+                    color: Colors.grey[300],
                   ),
                 ),
-                child: Row(
+                SizedBox(height: height15),
+
+                // Title shimmer
+                Container(
+                  width: 150,
+                  height: 22,
+                  color: Colors.white,
+                ),
+                SizedBox(height: height10),
+
+                // Description shimmer
+                Container(
+                  width: double.infinity,
+                  height: 16,
+                  color: Colors.white,
+                ),
+                SizedBox(height: height15),
+
+                // Rating and price row
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Add to Cart Button with Counter shimmer
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 28, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white,
-                            ),
+                    Row(
+                      children: [
+                        Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.grey[300],
                           ),
-                          Gap(8),
-                          Container(
-                            width: 60,
-                            height: 14,
-                            color: Colors.white,
-                          ),
-                        ],
-                      ),
+                        ),
+                        SizedBox(width: 4),
+                        Container(
+                          width: 30,
+                          height: 16,
+                          color: Colors.white,
+                        ),
+                      ],
                     ),
-
-                    // Price Display shimmer
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: Container(
-                        width: 60,
-                        height: 18,
-                        color: Colors.white,
-                      ),
+                      width: 70,
+                      height: 20,
+                      color: Colors.white,
                     ),
                   ],
                 ),
-              ),
-            ],
+                SizedBox(height: height15),
+
+                // Add to cart button shimmer
+                Container(
+                  width: double.infinity,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
     }
 
-    // Mock rating and delivery time
+    // Mock rating
     final double rating = 4.7;
-    final String deliveryTime = "20 min";
+    final bool isWishlisted = false; // You can connect this to your controller
 
     // Check if image URL is already complete or needs base URL
     String? imageUrl;
@@ -270,222 +149,378 @@ class SingleProductCard extends StatelessWidget {
     }
 
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: Dimensions.height15,
-        right: Dimensions.width10,
-      ),
+      margin: EdgeInsets.only(bottom: height15),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(radius15),
+        borderRadius: BorderRadius.circular(radius20),
         boxShadow: [
           BoxShadow(
-            color: (AppColors.iSecondaryColor ?? Colors.orange).withOpacity(0.2),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            spreadRadius: 2,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                margin: EdgeInsets.only(left: 20),
-                decoration: BoxDecoration(
-                  color: AppColors.orangeColor ?? Colors.orange,
-                  borderRadius: BorderRadius.circular(50),
+          // Product Image
+          GestureDetector(
+            onTap: () => Get.toNamed(RouteHelper.getSingleProduct(product.id!, 'home')),
+            child: Container(
+              width: double.infinity,
+              height: 220,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(radius20),
+                  topRight: Radius.circular(radius20),
                 ),
-                child: BigText(
-                  text: 'Popular',
-                  size: 14,
-                  color: AppColors.mainBlackColor ?? Colors.black,
-                ),
-              ),
-              Gap(15),
-              // Show category name instead of hardcoded text
-              GetBuilder<CategoryService>(
-                builder: (categoryService) {
-                  final categoryName = controller.getCategoryName(product);
-                  return SmallText(
-                    text: categoryName,
-                    size: 14,
-                    color: AppColors.textColor ?? Colors.black54,
-                  );
-                },
-              ),
-            ],
-          ),
-          Gap(height10),
-
-          // Product row (image + details)
-          Row(
-            children: [
-              // Product Image with GestureDetector
-              GestureDetector(
-                onTap: () => Get.toNamed(RouteHelper.getSingleProduct(product.id!, 'home')),
-                child: Container(
-                  width: listViewImgSize,
-                  height: listViewImgSize,
-                  margin: EdgeInsets.all(Dimensions.width10),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(radius15),
-                    color: (AppColors.darkColor ?? Colors.grey).withOpacity(0.1),
-                    image: imageUrl != null
-                        ? DecorationImage(
-                      image: NetworkImage(imageUrl),
-                      fit: BoxFit.cover,
-                    )
-                        : null,
-                  ),
-                  child: imageUrl == null
-                      ? Icon(
-                    Icons.fastfood,
-                    color: AppColors.mainColor ?? Colors.orange,
-                    size: iconSize24,
-                  )
-                      : null,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.iCardBgColor.withOpacity(0.1),
+                    AppColors.iCardBgColor.withOpacity(0.05),
+                  ],
                 ),
               ),
-              // Product Details
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: Dimensions.height10,
-                    horizontal: Dimensions.width10,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Restaurant Name
-                      BigText(
-                        text: product.name ?? 'Unknown Restaurant',
-                        size: 18,
+              child: Stack(
+                children: [
+                  if (imageUrl != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(radius20),
+                        topRight: Radius.circular(radius20),
                       ),
-                      Gap(height10),
-                      // Subtitle (Categories)
-                      SmallText(
-                        text: product.description ?? 'No categories available',
-                        size: font14,
-                        color: AppColors.textColor ?? Colors.black54,
-                      ),
-                      Gap(height10),
-                      // Rating, Delivery Info, Wishlist Icon
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Rating + Delivery
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.star,
-                                  color: AppColors.iSecondaryColor ?? Colors.orange,
-                                  size: iconSize24,
-                                ),
-                                Gap(width20 / 4),
-                                SmallText(
-                                  text: rating.toString(),
-                                  size: font14,
-                                ),
-                                Gap(width20 / 2),
-                                Icon(
-                                  Icons.local_shipping,
-                                  color: AppColors.iPrimaryColor ?? Colors.orange,
-                                  size: iconSize24,
-                                ),
-                                Gap(width20 / 4),
-                                Expanded(
-                                  child: SmallText(
-                                    text: deliveryTime,
-                                    size: font14,
-                                  ),
-                                ),
-                              ],
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                                  : null,
+                              strokeWidth: 2,
+                              color: AppColors.iSecondaryColor,
                             ),
-                          ),
-                          // Wishlist Button
-                          Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  // controller.addToWishlist(product);
-                                },
-                                child: Icon(
-                                  Icons.favorite_border,
-                                  color: AppColors.orangeColor ?? Colors.red,
-                                  size: iconSize24,
-                                ),
-                              ),
-                              Gap(width20 / 4),
-                              SmallText(
-                                text: 'Wishlist',
-                                size: font14,
-                              ),
-                            ],
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Center(
+                            child: Icon(
+                              Icons.fastfood,
+                              color: AppColors.mainColor ?? Colors.orange,
+                              size: 60,
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  else
+                    Center(
+                      child: Icon(
+                        Icons.fastfood,
+                        color: AppColors.mainColor ?? Colors.orange,
+                        size: 60,
+                      ),
+                    ),
+
+                  // Popular badge
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.iSecondaryColor,
+                            AppColors.iSecondaryColor.withOpacity(0.8),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.iSecondaryColor.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
                           ),
                         ],
                       ),
-                    ],
+                      child: Text(
+                        '🔥 Popular',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
-          ),
 
-          // Tags container at the bottom
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.only(left: 12, right: 12, bottom: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(radius15),
-                bottomRight: Radius.circular(radius15),
+                  // Rating badge
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.star_rounded,
+                            color: Colors.amber,
+                            size: 16,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            rating.toString(),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Wishlist button
+                  Positioned(
+                    bottom: 12,
+                    right: 12,
+                    child: GestureDetector(
+                      onTap: () {
+                        // Toggle wishlist functionality
+                        // controller.toggleWishlist(product);
+                      },
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          isWishlisted ? Icons.favorite : Icons.favorite_border,
+                          color: isWishlisted ? Colors.red : Colors.grey[600],
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          ),
+
+          // Product Details Container with premium gradient background
+          Container(
+            padding: EdgeInsets.all(width20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.iPrimaryColor,
+                  AppColors.iPrimaryColor,
+                ],
+              ),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(radius20),
+                bottomRight: Radius.circular(radius20),
+              ),
+              image: DecorationImage(
+                image: AssetImage('assets/elements/triangles.png'),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                  Colors.white.withOpacity(0.1),
+                  BlendMode.softLight,
+                ),
+                opacity: 0.15,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Add to Cart Button with Counter
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 28, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.iCardBgColor ?? Colors.orange,
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  child: Row(
-                    children: [
-                      // Decrement Button
-                      Icon(
-                        Icons.shopping_cart_outlined,
-                        color: AppColors.white ?? Colors.red,
-                        size: iconSize24,
-                      ),
-                      Gap(8),
-                      // Quantity Display
-                      BigText(
-                        text: 'Add to cart',
-                        size: 14,
-                        color: AppColors.white ?? Colors.black,
+                // Product Name
+                Text(
+                  product.name ?? 'Premium Product',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.white,
+                    height: 1.3,
+                    letterSpacing: -0.5,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 2,
+                        offset: Offset(1, 1),
                       ),
                     ],
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                SizedBox(height: height10),
 
-                // Price Display
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: BigText(
-                    text: 'R${(product.price ?? 0).toStringAsFixed(2)}',
-                    size: 18,
-                    color: AppColors.mainBlackColor ?? Colors.black,
+                // Description
+                Text(
+                  product.description ?? 'Exquisite culinary experience crafted with premium ingredients',
+                  style: TextStyle(
+                    fontSize: font14,
+                    color: AppColors.white,
+                    height: 1.4,
+                    fontWeight: FontWeight.w500,
+                    shadows: [
+                      Shadow(
+                        color: Colors.white.withOpacity(0.05),
+                        blurRadius: 1,
+                        offset: Offset(1, 1),
+                      ),
+                    ],
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: height15),
+
+                // Category tag
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.iAccentColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.iAccentColor.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: GetBuilder<CategoryService>(
+                    builder: (categoryService) {
+                      final categoryName = controller.getCategoryName(product);
+                      return Text(
+                        categoryName,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.iAccentColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(height: height15),
+
+                // Price and Add to Cart
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Price
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Price',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textColor.withOpacity(0.7),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'R${(product.price ?? 0).toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.iSecondaryColor,
+                            letterSpacing: -0.5,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 2,
+                                offset: Offset(1, 1),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Add to Cart Button
+                    GestureDetector(
+                      onTap: () {
+                        controller.addToCart(product, 1);
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.iSecondaryColor,
+                              AppColors.iSecondaryColor.withOpacity(0.5),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.iSecondaryColor.withOpacity(0.6),
+                              blurRadius: 12,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.add_shopping_cart_rounded,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Add to Cart',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ),
+          )
         ],
       ),
     );
