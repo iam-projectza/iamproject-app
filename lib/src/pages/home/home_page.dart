@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:iam/src/pages/orders/orders_page.dart';
 
 import '../../constants/colors.dart';
+import '../cart/cart_page.dart';
 import '../main_page/main_food_page.dart';
 
 
@@ -16,15 +18,16 @@ class _HomePageState extends State<HomePage> {
 
   List pages = [
     MainFoodPage(),
-    // CartPage(),
+    CartPage(),
+    OrdersPage(),
     // CartHistory(),
     // WishListPage(),
     // AccountPage(),
 
     //Text('cart'),
-    Text('history'),
-    Text('wishlist'),
-    Text('account'),
+   // Text('history'),
+   //  Text('wishlist'),
+   //  Text('account'),
 
 
   ];
@@ -60,9 +63,9 @@ class _HomePageState extends State<HomePage> {
             children: [
               _buildMinimalNavItem(0, Icons.home_outlined, Icons.home_filled, 'Home'),
               _buildMinimalNavItem(1, Icons.shopping_cart_outlined, Icons.shopping_cart, 'Cart'),
-              _buildMinimalNavItem(2, Icons.history_outlined, Icons.history, 'History'),
-              _buildMinimalNavItem(3, Icons.favorite_outlined, Icons.favorite, 'Wishlist'),
-              _buildMinimalNavItem(4, Icons.person_outlined, Icons.person, 'Profile'),
+              _buildMinimalNavItem(2, Icons.history_outlined, Icons.history, 'Orders'),
+              // _buildMinimalNavItem(3, Icons.favorite_outlined, Icons.favorite, 'Wishlist'),
+              // _buildMinimalNavItem(4, Icons.person_outlined, Icons.person, 'Profile'),
             ],
           ),
         ),

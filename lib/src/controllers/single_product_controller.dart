@@ -8,6 +8,7 @@ import '../data/repository/single_product_repo.dart';
 import '../helper/services/category_service.dart';
 import '../model/single_product_model.dart';
 import '../utils/app_constants.dart';
+import 'cart_controller.dart';
 
 // Cart Item model
 class CartItem {
@@ -52,6 +53,8 @@ class SingleProductController extends GetxController {
   int get inCartItems => _inCartItems + _quantity;
 
   final Map<int, int> _productQuantities = {};
+
+
 
   // ADDED: Filter methods
   void filterProductsByCategory(int? categoryId, String categoryName) {
@@ -245,16 +248,20 @@ class SingleProductController extends GetxController {
   }
 
   void addToCart(SingleProductModel product, int quantity) {
-    _cartItems.removeWhere((item) => item.product.id == product.id);
-    _cartItems.add(CartItem(product: product, quantity: quantity));
+    // Get the CartController instance
+    final cartController = Get.find<CartController>();
+
+    // Use CartController to add the item
+    cartController.addItem(product, quantity);
 
     Get.snackbar(
       'Success',
-      'Added ${quantity} ${product.name} to cart',
+      'Added $quantity ${product.name} to cart',
       backgroundColor: Colors.green,
       colorText: Colors.white,
       duration: Duration(seconds: 2),
     );
+
     update();
   }
 
@@ -460,6 +467,38 @@ class SingleProductController extends GetxController {
     } catch (e) {
       print("Error getting category name: $e");
       return 'Loading...';
+    }
+  }
+
+  void setQuantity(bool isIncrement){
+    if(isIncrement){
+      _quantity = checkQuantity(_quantity +1);
+      //print('number if items '+_quantity.toString());
+    }else{
+      _quantity = checkQuantity(_quantity -1);
+      //print('decrement '+_quantity.toString());
+    }
+    update();
+  }
+  int checkQuantity(int quantity){
+    if((_inCartItems+quantity)<0){
+      Get.snackbar('Item Count', 'You cant reduce more',
+        backgroundColor: AppColors.mainColor,
+        colorText: Colors.white,
+      );
+      if(_inCartItems>0){
+        _quantity = -_inCartItems;
+        return _quantity;
+      }
+      return 0;
+    } else if ((_inCartItems+quantity)>20){
+      Get.snackbar('Item Count', 'You cant add more',
+        backgroundColor: AppColors.mainColor,
+        colorText: Colors.white,
+      );
+      return 20;
+    } else {
+      return quantity;
     }
   }
 }

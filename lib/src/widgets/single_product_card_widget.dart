@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../constants/colors.dart';
+import '../controllers/cart_controller.dart';
 import '../controllers/single_product_controller.dart';
 import '../helper/services/category_service.dart';
 import '../model/single_product_model.dart';
@@ -476,7 +477,16 @@ class SingleProductCard extends StatelessWidget {
                     // Add to Cart Button
                     GestureDetector(
                       onTap: () {
-                        controller.addToCart(product, 1);
+                        final cartController = Get.find<CartController>();
+                        cartController.addItem(product, 1);
+
+                        // Optional: Show success message
+                        Get.snackbar(
+                          'Added to Cart',
+                          '${product.name} added to cart',
+                          backgroundColor: Colors.green,
+                          colorText: Colors.white,
+                        );
                       },
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),

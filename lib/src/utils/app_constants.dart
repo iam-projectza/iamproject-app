@@ -100,7 +100,7 @@ class AppConstants {
  static const String PHONE = "";
  static const String PASSWORD = "";
  static const String CART_LIST = 'Cart-list';
- static const String CART_HISTORY_LIST = "car-history-list";
+ static const String CART_HISTORY_LIST = "/api/car-history-list";
 
 //
 // Helper functions you may want to add in Flutter:

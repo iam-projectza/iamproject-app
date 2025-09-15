@@ -124,17 +124,20 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
       transform: matrix,
       child: Stack(
         children: [
-          Container(
-            height: Dimensions.pageViewContainer,
-            margin: EdgeInsets.symmetric(horizontal: Dimensions.width10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(Dimensions.radius30),
-              color: Colors.grey[200],
-              image: DecorationImage(
-                fit: BoxFit.cover,
-                image: imageUrl.isNotEmpty
-                    ? NetworkImage(imageUrl)
-                    : const AssetImage("assets/images/placeholder.png") as ImageProvider,
+          GestureDetector(
+            onTap: () => Get.toNamed(RouteHelper.getCategoryFood(index, 'home')),
+            child: Container(
+              height: Dimensions.pageViewContainer,
+              margin: EdgeInsets.symmetric(horizontal: Dimensions.width10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(Dimensions.radius30),
+                color: Colors.grey[200],
+                image: DecorationImage(
+                  fit: BoxFit.cover,
+                  image: imageUrl.isNotEmpty
+                      ? NetworkImage(imageUrl)
+                      : const AssetImage("assets/images/placeholder.png") as ImageProvider,
+                ),
               ),
             ),
           ),

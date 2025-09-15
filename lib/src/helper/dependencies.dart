@@ -1,10 +1,14 @@
 import 'package:get/get.dart';
 import 'package:iam/src/helper/services/category_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../controllers/cart_controller.dart';
 import '../controllers/category_product_controller.dart';
+import '../controllers/order_controller.dart';
 import '../controllers/single_product_controller.dart';
 import '../data/api/api_client.dart';
+import '../data/repository/cart_repo.dart';
 import '../data/repository/category_product_repo.dart';
+import '../data/repository/orders_repo.dart';
 import '../data/repository/single_product_repo.dart';
 
 import '../utils/app_constants.dart';
@@ -21,6 +25,8 @@ Future<void> initLightweight() async {
   // Repositories
   Get.lazyPut(() => CategoryProductRepo(apiClient: Get.find()));
   Get.lazyPut(() => SingleProductRepo(apiClient: Get.find()));
+  Get.lazyPut(() => CartRepo(sharedPreferences: Get.find()));
+  Get.lazyPut(() => OrderRepo(apiClient: Get.find()));
 
   // Services - ADD THIS
   Get.lazyPut(() => CategoryService());
@@ -28,6 +34,8 @@ Future<void> initLightweight() async {
   // Controllers
   Get.lazyPut(() => CategoryProductController(categoryProductRepo: Get.find()));
   Get.lazyPut(() => SingleProductController(singleProductRepo: Get.find()));
+  Get.lazyPut(() => CartController(cartRepo: Get.find()));
+  Get.lazyPut(() => OrderController(orderRepo: Get.find()));
 }
 
 // Heavy Initialization
