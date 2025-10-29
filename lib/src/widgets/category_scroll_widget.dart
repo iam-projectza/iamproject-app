@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_state_manager/src/simple/get_state.dart';
 import 'package:iam/src/widgets/small_text.dart';
 
 import '../constants/colors.dart';
 import '../controllers/category_product_controller.dart';
+import '../controllers/wishlist_controller.dart';
 import '../model/category_product_model.dart';
+import '../model/single_product_model.dart';
 import '../routes/route_helper.dart';
 import '../utils/app_constants.dart';
 import '../utils/dimensions.dart';
 import 'app_column.dart';
 import 'big_text.dart';
-import 'expandable_text_widget.dart';
 import 'interactive_favourite_button_widget.dart';
 
 class CategoryScrollWidget extends StatefulWidget {
@@ -28,9 +27,6 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
   final double _scaleFactor = 0.7;
   final double _height = Dimensions.pageViewContainer;
 
-  late bool isFavorite;
-  late VoidCallback onFavorite;
-
   @override
   void initState() {
     super.initState();
@@ -39,12 +35,6 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
         _currentPageValue = pageController.page!;
       });
     });
-    isFavorite = false;
-    onFavorite = () {
-      setState(() {
-        isFavorite = !isFavorite;
-      });
-    };
   }
 
   @override
@@ -70,24 +60,8 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
           itemCount: categoryProducts.categoryProductList.length,
           itemBuilder: (context, position) {
             final categoryProduct = categoryProducts.categoryProductList[position];
-            bool itemIsFavorite = categoryProduct.isFavorite ?? false;
-            itemOnFavorite() {
-              CategoryProductController categoryProductController = Get.find<CategoryProductController>();
-              if (itemIsFavorite) {
-                //categoryProductController.removeFromWishlist(categoryProduct);
-              } else {
-                categoryProductController.addToWishlist(categoryProduct);
-              }
-              setState(() {
-                itemIsFavorite = !itemIsFavorite;
-              });
-            }
-            return _buildPageItem(
-              position,
-              categoryProduct,
-              itemIsFavorite,
-              itemOnFavorite,
-            );
+
+            return _buildPageItem(position, categoryProduct);
           },
         ),
       )
@@ -97,7 +71,7 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
     });
   }
 
-  Widget _buildPageItem(int index, CategoryModel categoryProduct, bool isFavorite, VoidCallback onFavorite) {
+  Widget _buildPageItem(int index, CategoryModel categoryProduct) {
     final cs = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final imageUrl = getFullImageUrl(categoryProduct.image);
@@ -144,11 +118,11 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              height: Dimensions.pageViewTextContainer+20,
+              height: Dimensions.pageViewTextContainer + 20,
               margin: EdgeInsets.only(
                 left: Dimensions.width30,
                 right: Dimensions.width30,
-                bottom: Dimensions.height15, // <-- Add extra space here
+                bottom: Dimensions.height15,
               ),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(Dimensions.radius20),
@@ -164,7 +138,6 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
                   left: Dimensions.width10,
                   right: Dimensions.width10,
                   top: Dimensions.height15 - 10,
-
                 ),
                 child: SingleChildScrollView(
                   child: Column(
@@ -180,11 +153,49 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
                               color: AppColors.white,
                             ),
                           ),
-                          InteractiveFavoriteButton(
-                            isFavorite: isFavorite,
-                            onToggle: onFavorite,
-                            activeColor: AppColors.orangeColor,
-                            inactiveColor: AppColors.iSecondaryColor,
+                          // UPDATED: Using proper WishlistController with Firebase
+                          GetBuilder<WishlistController>(
+                            builder: (wishlistController) {
+                              final bool isWishlisted = categoryProduct.id != null &&
+                                  wishlistController.isInWishlist(categoryProduct.id!);
+
+                              return GestureDetector(
+                                onTap: () {
+                                  if (categoryProduct.id != null) {
+                                    // Convert CategoryModel to SingleProductModel for wishlist
+                                    // Using only available properties from CategoryModel
+                                    final product = SingleProductModel(
+                                      id: categoryProduct.id,
+                                      name: categoryProduct.name,
+                                      // price: categoryProduct.price, // Not available in CategoryModel
+                                      price: 0.0, // Default price for categories
+                                      image: categoryProduct.image,
+                                      description: categoryProduct.description,
+                                      // category_id: categoryProduct.category_id, // Not available
+                                      category_id: categoryProduct.id, // Use category id as category_id
+                                      // category_name: categoryProduct.category_name, // Not available
+                                      category_name: categoryProduct.name, // Use category name as category_name
+                                      //rating: categoryProduct.rating ?? 0.0, // Use available rating
+                                      // stock: categoryProduct.stock, // Not available
+                                      stock: 100, // Default stock for categories
+                                    );
+                                    wishlistController.toggleWishlist(product);
+                                  }
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    isWishlisted ? Icons.favorite : Icons.favorite_border,
+                                    color: isWishlisted ? Colors.red : AppColors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -214,10 +225,8 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
                             AppColumn(
                               text: categoryProduct.description ?? 'No description available.',
                             ),
-
-                            // ADDED: Padding around the Row to create space below it
                             Padding(
-                              padding: EdgeInsets.only(bottom: Dimensions.height45), // Space below the row
+                              padding: EdgeInsets.only(bottom: Dimensions.height45),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [
@@ -248,7 +257,6 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
                                 ],
                               ),
                             ),
-
                           ],
                         ),
                       ),
@@ -261,26 +269,5 @@ class _CategoryScrollWidgetState extends State<CategoryScrollWidget> {
         ],
       ),
     );
-  }
-
-  void _addToWishlist(CategoryModel product) {
-    CategoryProductController categoryProductController = Get.find<CategoryProductController>();
-    if (categoryProductController.isInWishlist(product)) {
-      Get.snackbar(
-        'Wishlist',
-        'Item already in wishlist!',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    } else {
-      categoryProductController.addToWishlist(product);
-      Get.toNamed(RouteHelper.getInitialPage());
-      Get.snackbar(
-        'Wishlist',
-        'Item added to wishlist!',
-        backgroundColor: AppColors.mainColor,
-        colorText: Colors.white,
-      );
-    }
   }
 }

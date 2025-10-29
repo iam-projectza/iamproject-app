@@ -206,7 +206,7 @@ class _FoodBodyScrollState extends State<FoodBodyScroll> {
                           SizedBox(width: 4),
                           Text(
                             "R${singleProduct.price ?? 0} Delivery Fee",
-                            style: TextStyle(fontSize: 14, color: Colors.grey?[600]),
+                            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                           ),
                         ],
                       ),
@@ -223,7 +223,7 @@ class _FoodBodyScrollState extends State<FoodBodyScroll> {
               child: CircleAvatar(
                 backgroundColor: Colors.white,
                 radius: 16,
-                child: Icon(Icons.favorite_border, color: Colors.grey?[600], size: 18),
+                child: Icon(Icons.favorite_border, color: Colors.grey[600], size: 18),
               ),
             ),
           ],

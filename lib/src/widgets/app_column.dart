@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../constants/colors.dart';
 import '../utils/dimensions.dart';
 import 'big_text.dart';
 

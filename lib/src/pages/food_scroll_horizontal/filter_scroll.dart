@@ -5,6 +5,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../constants/colors.dart';
 import '../../controllers/category_product_controller.dart';
 import '../../controllers/single_product_controller.dart';
+import '../../data/repository/single_product_repo.dart';
 import '../../utils/app_constants.dart';
 
 class FilterScroll extends StatelessWidget {
@@ -19,7 +20,9 @@ class FilterScroll extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Get the SingleProductController instance
-    final singleProductController = Get.find<SingleProductController>();
+    final singleProductController = Get.isRegistered<SingleProductController>()
+        ? Get.find<SingleProductController>()
+        : Get.put(SingleProductController(singleProductRepo: Get.find<SingleProductRepo>()));
 
     return GetBuilder<CategoryProductController>(builder: (controller) {
       if (!controller.isLoaded) {

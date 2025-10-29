@@ -3,7 +3,9 @@ import 'package:get/get.dart';
 
 import '../../constants/colors.dart';
 import '../../controllers/category_product_controller.dart';
+import '../../controllers/single_product_controller.dart';
 import '../../model/category_product_model.dart';
+import '../../model/single_product_model.dart';
 import '../../routes/route_helper.dart';
 import '../../utils/app_constants.dart';
 import '../../utils/dimensions.dart';
@@ -11,6 +13,7 @@ import '../../widgets/app_column.dart';
 import '../../widgets/big_text.dart';
 import '../../widgets/expandable_text_widget.dart';
 import '../../widgets/helper_icon.dart';
+import '../../widgets/single_product_card_widget.dart';
 
 class CategoryFoodDetails extends StatefulWidget {
   final int pageId;
@@ -23,48 +26,32 @@ class CategoryFoodDetails extends StatefulWidget {
 }
 
 class _CategoryFoodDetailsState extends State<CategoryFoodDetails> {
-  int quantity = 1;
-  double price = 20.99;
+  late CategoryModel categoryProduct;
+  late List<SingleProductModel> categorySingleProducts = [];
 
-  // Static list of recommended groceries
-  List<Map<String, dynamic>> recommendedGroceries = [
-    {"image": 'assets/icons/grocery.jpg', "title": "Fresh Apples", "price": 15.99},
-    {"image": 'assets/icons/vegies.jpg', "title": "Organic Bananas", "price": 10.50},
-    {"image": 'assets/icons/takeway.jpg', "title": "Dairy Milk", "price": 12.75},
-    {"image": 'assets/icons/sushi.jpg', "title": "Whole Wheat Bread", "price": 8.99},
-  ];
+  @override
+  void initState() {
+    super.initState();
 
-  void _addToWishlist(CategoryModel product) {
-    Get.find<CategoryProductController>().addToWishlist(product);
-    Get.snackbar(
-      'Wishlist',
-      'Item added to wishlist!',
-      backgroundColor: AppColors.mainColor,
-      colorText: Colors.white,
-    );
-    Get.toNamed(RouteHelper.getInitialPage());
+    // Get the category product
+    final categoryController = Get.find<CategoryProductController>();
+    categoryProduct = categoryController.categoryProductList[widget.pageId];
+
+    // Filter single products by this category
+    _filterProductsByCategory();
   }
 
-  void _addToCart() {
-    Get.snackbar(
-      'Cart',
-      'Item added to cart!',
-      backgroundColor: AppColors.mainColor,
-      colorText: Colors.white,
-    );
-  }
+  void _filterProductsByCategory() {
+    final singleProductController = Get.find<SingleProductController>();
 
-  void _increaseQuantity() {
-    setState(() {
-      quantity++;
-    });
-  }
+    // Get category name from the category product
+    final categoryName = categoryProduct.name;
 
-  void _decreaseQuantity() {
-    if (quantity > 1) {
-      setState(() {
-        quantity--;
-      });
+    if (categoryName != null) {
+      // Filter single products that belong to this category
+      categorySingleProducts = singleProductController.singleProductList
+          .where((product) => product.category_name == categoryName)
+          .toList();
     }
   }
 
@@ -77,7 +64,7 @@ class _CategoryFoodDetailsState extends State<CategoryFoodDetails> {
 
   @override
   Widget build(BuildContext context) {
-    var product = Get.find<CategoryProductController>().categoryProductList[widget.pageId];
+    final singleProductController = Get.find<SingleProductController>();
 
     return Scaffold(
       backgroundColor: AppColors.bgColor,
@@ -93,16 +80,14 @@ class _CategoryFoodDetailsState extends State<CategoryFoodDetails> {
               height: Dimensions.popularFoodImgSize,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: NetworkImage(getFullImageUrl(product.image)),
+                  image: NetworkImage(getFullImageUrl(categoryProduct.image)),
                   fit: BoxFit.cover,
                 ),
               ),
             ),
           ),
 
-          // 2. Top Action Icons
-
-          // 3. Scrollable Content (CustomScrollView)
+          // 3. Scrollable Content (CustomScrollView) - MOVED UP IN ORDER TO PREVENT OVERLAP BLOCKING TOUCHES
           CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
@@ -129,121 +114,24 @@ class _CategoryFoodDetailsState extends State<CategoryFoodDetails> {
                           children: [
                             SizedBox(height: Dimensions.height20),
                             AppColumn(
-                              text: product.name ?? 'No Name',
-
+                              text: categoryProduct.name ?? 'No Name',
                             ),
                             SizedBox(height: Dimensions.height20),
                             BigText(text: "Details:", color: AppColors.white),
                             SizedBox(height: Dimensions.height10),
                             Text(
-                              product.name ?? 'No name available',
+                              categoryProduct.name ?? 'No name available',
                               style: TextStyle(color: AppColors.white),
                             ),
                             SizedBox(height: Dimensions.height10),
                             ExpandableTextWidget(
-                              text: product.description ?? 'No description available.',
+                              text: categoryProduct.description ?? 'No description available.',
                             ),
                             SizedBox(height: Dimensions.height20),
 
-                            // Quantity Buttons
-                            Row(
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.white),
-                                    borderRadius: BorderRadius.circular(45),
-                                    color: AppColors.iCardBgColor,
-                                  ),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: Dimensions.width15,
-                                    vertical: 5,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      InkWell(
-                                        onTap: _decreaseQuantity,
-                                        child: Icon(Icons.remove, color: AppColors.white, size: 15),
-                                      ),
-                                      SizedBox(width: Dimensions.width20),
-                                      Text(
-                                        '$quantity',
-                                        style: TextStyle(color: AppColors.white, fontSize: 14),
-                                      ),
-                                      SizedBox(width: Dimensions.width20),
-                                      InkWell(
-                                        onTap: _increaseQuantity,
-                                        child: Icon(Icons.add, color: AppColors.white, size: 15),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: Dimensions.height20),
+                            // Products in this category section
+                            _buildProductsSection(singleProductController),
 
-                            // Recommended Groceries Slider
-                            Text(
-                              "Recommended Groceries",
-                              style: TextStyle(
-                                fontSize: Dimensions.font16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(height: Dimensions.height10),
-                            SizedBox(
-                              height: 150,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: recommendedGroceries.length,
-                                itemBuilder: (context, index) {
-                                  var item = recommendedGroceries[index];
-                                  return Container(
-                                    width: 130,
-                                    margin: EdgeInsets.only(right: Dimensions.width10),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: Stack(
-                                        children: [
-                                          Image.asset(
-                                            item["image"],
-                                            width: double.infinity,
-                                            height: double.infinity,
-                                            fit: BoxFit.cover,
-                                          ),
-                                          Container(
-                                            width: double.infinity,
-                                            height: double.infinity,
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                begin: Alignment.bottomCenter,
-                                                end: Alignment.topCenter,
-                                                colors: [Colors.black.withOpacity(0.6), Colors.transparent],
-                                              ),
-                                            ),
-                                          ),
-                                          Positioned(
-                                            bottom: 10,
-                                            left: 10,
-                                            right: 10,
-                                            child: Text(
-                                              item["title"],
-                                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
                             SizedBox(height: Dimensions.height20),
                           ],
                         ),
@@ -254,49 +142,107 @@ class _CategoryFoodDetailsState extends State<CategoryFoodDetails> {
               ),
             ],
           ),
+
+          // 2. Top Action Icons - FIXED: Made this more prominent and ensured proper touch area (NOW LAST IN PAINT ORDER TO SIT ON TOP)
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: Dimensions.width20,
-                  vertical: Dimensions.height10,
-                ),
-                child: Material(
-                  color: Colors.transparent,
+            child: Container(
+              height: kToolbarHeight + MediaQuery.of(context).padding.top,
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: Dimensions.width20,
+                    vertical: Dimensions.height10,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      GestureDetector(
-                        onTap: () {
-                          Get.toNamed(RouteHelper.getInitialPage());
-                        },
-                        child: HelperIcon(
-                          icon: Icons.arrow_back,
-                          size: Dimensions.iconSize16,
-                          color: AppColors.iWhiteColor,
+                      // Back button with larger touch area
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.black.withOpacity(0.3),
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            Get.back();
+                          },
+                          icon: Icon(
+                            Icons.arrow_back_ios_rounded,
+                            size: 20,
+                            color: AppColors.iWhiteColor,
+                          ),
+                          padding: EdgeInsets.zero,
+                          splashRadius: 20,
                         ),
                       ),
                       Row(
                         children: [
-                          HelperIcon(
-                            icon: Icons.shopping_cart,
-                            size: Dimensions.iconSize16,
-                            color: AppColors.yellowColor,
+                          // Cart icon
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.black.withOpacity(0.3),
+                            ),
+                            child: IconButton(
+                              onPressed: () => Get.toNamed(RouteHelper.getCartPage()),
+                              icon: Icon(
+                                Icons.shopping_cart,
+                                size: 20,
+                                color: AppColors.yellowColor,
+                              ),
+                              padding: EdgeInsets.zero,
+                              splashRadius: 20,
+                            ),
                           ),
                           SizedBox(width: Dimensions.width10),
-                          HelperIcon(
-                            icon: Icons.favorite_border,
-                            size: Dimensions.iconSize16,
-                            color: AppColors.iSecondaryColor,
+                          // Wishlist icon
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.black.withOpacity(0.3),
+                            ),
+                            child: IconButton(
+                              onPressed: () => Get.toNamed(RouteHelper.wishlistPage),
+                              icon: Icon(
+                                Icons.favorite_border,
+                                size: 20,
+                                color: AppColors.iSecondaryColor,
+                              ),
+                              padding: EdgeInsets.zero,
+                              splashRadius: 20,
+                            ),
                           ),
                           SizedBox(width: Dimensions.width10),
-                          HelperIcon(
-                            icon: Icons.more_horiz,
-                            size: Dimensions.iconSize16,
-                            color: AppColors.iWhiteColor,
+                          // More options icon
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.black.withOpacity(0.3),
+                            ),
+                            child: IconButton(
+                              onPressed: () {
+                                // Add more options functionality here
+                              },
+                              icon: Icon(
+                                Icons.more_horiz,
+                                size: 20,
+                                color: AppColors.iWhiteColor,
+                              ),
+                              padding: EdgeInsets.zero,
+                              splashRadius: 20,
+                            ),
                           ),
                         ],
                       ),
@@ -307,61 +253,98 @@ class _CategoryFoodDetailsState extends State<CategoryFoodDetails> {
             ),
           ),
 
-          // ✅ 4. Circular Logo - Now correctly placed as direct child of main Stack
-          Positioned(
-            top: Dimensions.popularFoodImgSize - 47 - 50,
-            left: MediaQuery.of(context).size.width / 2 - Dimensions.radius40,
-            child: CircleAvatar(
-              radius: Dimensions.radius40,
-              backgroundColor: AppColors.iWhiteColor,
-              child: CircleAvatar(
-                radius: Dimensions.radius35,
-                backgroundImage: getFullImageUrl(product.image).isNotEmpty
-                    ? NetworkImage(getFullImageUrl(product.image))
-                    : AssetImage("assets/images/placeholder.png") as ImageProvider,
-                onBackgroundImageError: (_, __) {},
-              ),
-            ),
-          ),
+
         ],
       ),
+    );
+  }
 
-      // Bottom Bar
-      bottomNavigationBar: Container(
-        padding: EdgeInsets.all(Dimensions.height20),
-        color: AppColors.iPrimaryColor,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildProductsSection(SingleProductController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            ElevatedButton(
-              onPressed: _addToCart,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(color: AppColors.mainColor),
-                ),
-                padding: EdgeInsets.symmetric(
-                  horizontal: Dimensions.width20,
-                  vertical: Dimensions.height10,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    'Add $quantity to cart • ',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  Text(
-                    'R ${(price * quantity).toStringAsFixed(2)}',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ],
+            BigText(
+              text: 'Products in this Category',
+              color: AppColors.white,
+              size: 18,
+            ),
+            Text(
+              '${categorySingleProducts.length} items',
+              style: TextStyle(
+                color: AppColors.white.withOpacity(0.8),
+                fontSize: 14,
               ),
             ),
           ],
         ),
+        SizedBox(height: Dimensions.height15),
+
+        // Products list
+        if (categorySingleProducts.isEmpty)
+          _buildEmptyState()
+        else
+          _buildProductsList(controller),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      padding: EdgeInsets.all(Dimensions.height20),
+      decoration: BoxDecoration(
+        color: AppColors.iCardBgColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(Dimensions.radius20),
+        border: Border.all(color: AppColors.white.withOpacity(0.2)),
       ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.fastfood_outlined,
+            size: 50,
+            color: AppColors.white.withOpacity(0.5),
+          ),
+          SizedBox(height: Dimensions.height10),
+          Text(
+            'No products available in this category',
+            style: TextStyle(
+              color: AppColors.white.withOpacity(0.7),
+              fontSize: 16,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: Dimensions.height10),
+          Text(
+            'Check back later for new additions',
+            style: TextStyle(
+              color: AppColors.white.withOpacity(0.5),
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductsList(SingleProductController controller) {
+    return ListView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: categorySingleProducts.length,
+      itemBuilder: (context, index) {
+        final product = categorySingleProducts[index];
+        return Padding(
+          padding: EdgeInsets.only(bottom: Dimensions.height15),
+          child: SingleProductCard(
+            product: product,
+            controller: controller,
+          ),
+        );
+      },
     );
   }
 }

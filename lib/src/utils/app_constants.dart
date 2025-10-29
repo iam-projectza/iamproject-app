@@ -7,8 +7,9 @@ class AppConstants {
  //static const String BASE_URL = 'http://192.168.10.49:8000';
  //static const String BASE_URL = 'http://10.0.2.2:8000';
  static const String BASE_URL = 'https://iamproject.co.za';
-
-
+ static const String CART_LIST = "cart-list";
+ static const String CART_HISTORY_LIST = "cart-history-list";
+ static const String ORDERS_HISTORY_URI = "/api/orders/history";
 
  //
  // == API ENDPOINTS ==
@@ -96,12 +97,18 @@ class AppConstants {
  static const String PLACE_ORDER_URI = ORDERS_URI;
 
  // Local storage keys for client
- static const String TOKEN = '';
+ static const String TOKEN = "user_token";
  static const String PHONE = "";
  static const String PASSWORD = "";
- static const String CART_LIST = 'Cart-list';
- static const String CART_HISTORY_LIST = "/api/car-history-list";
 
+ // Delivery costs
+ static const double STANDARD_DELIVERY_COST = 49.99;
+ static const double EXPRESS_DELIVERY_COST = 99.99;
+ static const double FREE_DELIVERY_THRESHOLD = 500.00;
+
+ // Delivery time estimates
+ static const String STANDARD_DELIVERY_TIME = "2-3 business days";
+ static const String EXPRESS_DELIVERY_TIME = "Same day (if ordered before 2PM)";
 //
 // Helper functions you may want to add in Flutter:
 // - fullUrl(String uri) => '$BASE_URL$uri'

@@ -10,7 +10,6 @@ import '../model/single_product_model.dart';
 import '../utils/app_constants.dart';
 import 'cart_controller.dart';
 
-// Cart Item model
 class CartItem {
   final SingleProductModel product;
   final int quantity;
@@ -30,17 +29,15 @@ class SingleProductController extends GetxController {
   int? _selectedCategoryId;
   String? _selectedCategoryName;
 
-  // ADDED: Track filter status
   bool _isFiltering = false;
   bool get isFiltering => _isFiltering;
 
-  // ADDED: Track if filtered list is empty
   bool _filteredListEmpty = false;
   bool get filteredListEmpty => _filteredListEmpty;
 
-  List<SingleProductModel> _wishlist = [];
+  final List<SingleProductModel> _wishlist = [];
   List<SingleProductModel> get wishlist => _wishlist;
-  List<CartItem> _cartItems = [];
+  final List<CartItem> _cartItems = [];
   List<CartItem> get cartItems => _cartItems;
 
   bool _isLoaded = false;
@@ -49,25 +46,32 @@ class SingleProductController extends GetxController {
   int _quantity = 0;
   int get quantity => _quantity;
 
-  int _inCartItems = 0;
+  final int _inCartItems = 0;
   int get inCartItems => _inCartItems + _quantity;
 
   final Map<int, int> _productQuantities = {};
 
+  // ADDED: Better context handling
+  BuildContext? get safeContext {
+    try {
+      return Get.context;
+    } catch (e) {
+      return null;
+    }
+  }
 
+  // ADDED: Check if controller is ready to build widgets
+  bool get isReady => _isLoaded && safeContext != null && safeContext!.mounted;
 
-  // ADDED: Filter methods
   void filterProductsByCategory(int? categoryId, String categoryName) {
     _selectedCategoryId = categoryId;
     _selectedCategoryName = categoryName;
     _isFiltering = categoryId != null;
 
     if (categoryId == null) {
-      // Show all products
       _filteredProducts.clear();
       _filteredListEmpty = false;
     } else {
-      // Filter products by category - FIXED: Use category name lookup
       final categoryService = Get.find<CategoryService>();
       final categoryName = categoryService.getCategoryName(categoryId);
 
@@ -75,20 +79,18 @@ class SingleProductController extends GetxController {
         return product.category_name == categoryName;
       }).toList();
 
-      // Check if filtered list is empty
       _filteredListEmpty = _filteredProducts.isEmpty;
 
-      // Show popup if no products in this category
       if (_filteredListEmpty) {
         _showNoProductsPopup(categoryName);
       }
     }
-
-    update(); // Notify listeners about the change
+    update();
   }
 
-  // ADDED: Show popup when no products in category
   void _showNoProductsPopup(String categoryName) {
+    if (safeContext == null || !safeContext!.mounted) return;
+
     Get.dialog(
       BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
@@ -100,11 +102,6 @@ class SingleProductController extends GetxController {
             decoration: BoxDecoration(
               color: AppColors.iCardBgColor,
               borderRadius: BorderRadius.circular(20),
-              image: DecorationImage(
-                image: AssetImage('assets/elements/triangles.png'), // Update with your actual path
-                fit: BoxFit.cover,
-                opacity: 0.1,
-              ),
             ),
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -176,7 +173,7 @@ class SingleProductController extends GetxController {
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 32),
-                  Container(
+                  SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
@@ -192,10 +189,6 @@ class SingleProductController extends GetxController {
                         ),
                         elevation: 0,
                         shadowColor: Colors.transparent,
-                        textStyle: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                        ),
                       ),
                       child: Text('OK'),
                     ),
@@ -210,7 +203,6 @@ class SingleProductController extends GetxController {
     );
   }
 
-  // ADDED: Reset filter to show all products
   void resetFilter() {
     _selectedCategoryId = null;
     _selectedCategoryName = null;
@@ -220,17 +212,14 @@ class SingleProductController extends GetxController {
     update();
   }
 
-  // ADDED: Check if category is selected
   bool isCategorySelected(int categoryId) {
     return _selectedCategoryId == categoryId;
   }
 
-  // ADDED: Check if "All" is selected
   bool isAllSelected() {
     return _selectedCategoryId == null;
   }
 
-  // ADDED: Get current filter status
   int? get selectedCategoryId => _selectedCategoryId;
   String? get selectedCategoryName => _selectedCategoryName;
 
@@ -248,10 +237,7 @@ class SingleProductController extends GetxController {
   }
 
   void addToCart(SingleProductModel product, int quantity) {
-    // Get the CartController instance
     final cartController = Get.find<CartController>();
-
-    // Use CartController to add the item
     cartController.addItem(product, quantity);
 
     Get.snackbar(
@@ -261,7 +247,6 @@ class SingleProductController extends GetxController {
       colorText: Colors.white,
       duration: Duration(seconds: 2),
     );
-
     update();
   }
 
@@ -277,19 +262,19 @@ class SingleProductController extends GetxController {
 
   double getTotalPrice() {
     double total = 0;
-    _cartItems.forEach((item) {
+    for (var item in _cartItems) {
       if (item.product.price != null) {
         total += item.product.price! * item.quantity;
       }
-    });
+    }
     return total;
   }
 
   int getTotalItems() {
     int total = 0;
-    _cartItems.forEach((item) {
+    for (var item in _cartItems) {
       total += item.quantity;
-    });
+    }
     return total;
   }
 
@@ -303,25 +288,10 @@ class SingleProductController extends GetxController {
       } catch (e) {
         print("Attempt ${attempt + 1} failed to preload image: $e");
         if (attempt == maxRetries - 1) {
-          print("All attempts failed for image: $imageUrl");
-          rethrow;
+          break;
         }
         await Future.delayed(Duration(seconds: 1));
       }
-    }
-  }
-
-  Future<void> precacheImageWithTimeout(String imageUrl, BuildContext context) async {
-    final HttpClient httpClient = HttpClient();
-    httpClient.connectionTimeout = const Duration(seconds: 10);
-
-    try {
-      final imageProvider = NetworkImage(imageUrl);
-      await precacheImage(imageProvider, context);
-    } catch (e) {
-      print("Failed to preload image: $e");
-    } finally {
-      httpClient.close();
     }
   }
 
@@ -350,19 +320,18 @@ class SingleProductController extends GetxController {
               .toList();
 
           _isLoaded = true;
-          print("Loaded ${_singleProductList.length} single products:");
-          _singleProductList.forEach((product) {
-            print('Product: ${product.name}, Category ID: ${product.category_id}, Category Name: ${product.category_name}');
-          });
+          print("Loaded ${_singleProductList.length} single products");
 
-          // ADDED: Reapply current filter after loading new data
           if (_selectedCategoryId != null && _selectedCategoryName != null) {
             filterProductsByCategory(_selectedCategoryId, _selectedCategoryName!);
           }
 
-          if (_singleProductList.isNotEmpty && Get.context != null) {
-            await preloadImagesWithConcurrency(_singleProductList);
-          }
+          // Use delayed image preloading to avoid context issues
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_singleProductList.isNotEmpty && safeContext != null && safeContext!.mounted) {
+              preloadImagesWithConcurrency(_singleProductList);
+            }
+          });
         } else {
           print("Invalid response structure: 'data' key is missing.");
           _isLoaded = false;
@@ -379,6 +348,11 @@ class SingleProductController extends GetxController {
   }
 
   Future<void> preloadImagesWithConcurrency(List<SingleProductModel> singleProduct) async {
+    if (safeContext == null || !safeContext!.mounted) {
+      print("Context not available for image preloading");
+      return;
+    }
+
     int maxConcurrentRequests = 3;
     Queue<SingleProductModel> queue = Queue.from(singleProduct);
     List<Future<void>> activeTasks = [];
@@ -389,16 +363,18 @@ class SingleProductController extends GetxController {
 
       try {
         if (product.image != null && product.image!.isNotEmpty) {
-          final imageUrl = AppConstants.BASE_URL + '/' + product.image!;
+          final imageUrl = '${AppConstants.BASE_URL}/${product.image!}';
           print("Preloading image: $imageUrl");
-          if (Get.context != null) {
-            await precacheImageWithRetry(imageUrl, Get.context!, maxRetries: 2);
+          if (safeContext != null && safeContext!.mounted) {
+            await precacheImageWithRetry(imageUrl, safeContext!, maxRetries: 2);
           }
         }
       } catch (e) {
         print("Failed to preload image for product ${product.name}: $e");
       }
-      await preloadNext();
+      if (queue.isNotEmpty) {
+        await preloadNext();
+      }
     }
 
     for (int i = 0; i < maxConcurrentRequests && queue.isNotEmpty; i++) {
@@ -447,52 +423,48 @@ class SingleProductController extends GetxController {
   }
 
   String getCategoryName(SingleProductModel product) {
-    try {
-      final categoryService = Get.find<CategoryService>();
+    if (product.category_name != null && product.category_name!.isNotEmpty) {
+      return product.category_name!;
+    }
 
-      // First try to use category_id if available
-      if (product.category_id != null) {
-        return categoryService.getCategoryName(product.category_id);
-      }
-
-      // If category_id is null, try to find ID by category name
-      if (product.category_name != null) {
-        final categoryId = categoryService.getCategoryIdByName(product.category_name);
-        if (categoryId != null) {
-          return categoryService.getCategoryName(categoryId);
+    if (product.category_id != null) {
+      if (Get.isRegistered<CategoryService>()) {
+        final service = Get.find<CategoryService>();
+        if (service.isLoaded) {
+          return service.getCategoryName(product.category_id);
         }
       }
-
-      return 'Uncategorized';
-    } catch (e) {
-      print("Error getting category name: $e");
-      return 'Loading...';
     }
+
+    return 'Uncategorized';
   }
 
-  void setQuantity(bool isIncrement){
-    if(isIncrement){
-      _quantity = checkQuantity(_quantity +1);
-      //print('number if items '+_quantity.toString());
-    }else{
-      _quantity = checkQuantity(_quantity -1);
-      //print('decrement '+_quantity.toString());
+  void setQuantity(bool isIncrement) {
+    if (isIncrement) {
+      _quantity = checkQuantity(_quantity + 1);
+    } else {
+      _quantity = checkQuantity(_quantity - 1);
     }
     update();
   }
-  int checkQuantity(int quantity){
-    if((_inCartItems+quantity)<0){
-      Get.snackbar('Item Count', 'You cant reduce more',
+
+  int checkQuantity(int quantity) {
+    if ((_inCartItems + quantity) < 0) {
+      Get.snackbar(
+        'Item Count',
+        'You cant reduce more',
         backgroundColor: AppColors.mainColor,
         colorText: Colors.white,
       );
-      if(_inCartItems>0){
+      if (_inCartItems > 0) {
         _quantity = -_inCartItems;
         return _quantity;
       }
       return 0;
-    } else if ((_inCartItems+quantity)>20){
-      Get.snackbar('Item Count', 'You cant add more',
+    } else if ((_inCartItems + quantity) > 20) {
+      Get.snackbar(
+        'Item Count',
+        'You cant add more',
         backgroundColor: AppColors.mainColor,
         colorText: Colors.white,
       );

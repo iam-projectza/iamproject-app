@@ -3,11 +3,43 @@ import 'package:get/get.dart';
 import 'package:iam/src/controllers/cart_controller.dart';
 import 'package:iam/src/utils/dimensions.dart';
 import 'package:iam/src/utils/app_constants.dart';
-import 'package:iam/src/widgets/big_text.dart';
-import 'package:iam/src/routes/route_helper.dart'; // ADD THIS IMPORT
+import 'package:iam/src/routes/route_helper.dart';
 
-class CartPage extends StatelessWidget {
-  const CartPage({Key? key}) : super(key: key);
+import '../../constants/colors.dart';
+import '../../widgets/order_confirmation_modal.dart';
+
+class CartPage extends StatefulWidget {
+  const CartPage({super.key});
+
+  @override
+  State<CartPage> createState() => _CartPageState();
+}
+
+class _CartPageState extends State<CartPage> {
+  String _userAddress = 'Loading address...';
+  bool _isLoadingAddress = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserAddress();
+  }
+
+  Future<void> _loadUserAddress() async {
+    try {
+      final cartController = Get.find<CartController>();
+      final address = await cartController.getUserAddress();
+      setState(() {
+        _userAddress = address;
+        _isLoadingAddress = false;
+      });
+    } catch (e) {
+      setState(() {
+        _userAddress = 'Address not available';
+        _isLoadingAddress = false;
+      });
+    }
+  }
 
   // Helper method to get complete image URL
   String _getCompleteImageUrl(String? imagePath) {
@@ -43,18 +75,17 @@ class CartPage extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         actions: [
-          TextButton(
+          IconButton(
             onPressed: () {
-              // Edit items functionality
+              cartController.printDebugInfo();
+              Get.snackbar(
+                'Debug Info',
+                'Check console for cart details',
+                backgroundColor: Colors.blue,
+                colorText: Colors.white,
+              );
             },
-            child: Text(
-              'EDIT ITEMS',
-              style: TextStyle(
-                color: Colors.blue,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            ),
+            icon: Icon(Icons.bug_report, color: Colors.blue),
           ),
         ],
       ),
@@ -70,6 +101,13 @@ class CartPage extends StatelessWidget {
                   Icon(Icons.shopping_cart, size: 64, color: Colors.grey),
                   SizedBox(height: Dimensions.height20),
                   Text('Your cart is empty', style: TextStyle(fontSize: 18)),
+                  SizedBox(height: Dimensions.height20),
+                  ElevatedButton(
+                    onPressed: () {
+                      Get.offAllNamed(RouteHelper.getInitialPage());
+                    },
+                    child: Text('Continue Shopping'),
+                  ),
                 ],
               ),
             );
@@ -89,7 +127,6 @@ class CartPage extends StatelessWidget {
 
                     return GestureDetector(
                       onTap: () {
-                        // Navigate to single product details when item is tapped
                         if (item.product?.id != null) {
                           Get.toNamed(
                             RouteHelper.getSingleProduct(item.product!.id!, 'cart'),
@@ -111,7 +148,6 @@ class CartPage extends StatelessWidget {
                         ),
                         child: Column(
                           children: [
-                            // Product Item
                             Padding(
                               padding: EdgeInsets.all(16),
                               child: Row(
@@ -182,7 +218,7 @@ class CartPage extends StatelessWidget {
                                               ),
                                             ),
                                             Text(
-                                              '14\'\'', // Size - you can replace this with actual size data if available
+                                              '14\'\'',
                                               style: TextStyle(
                                                 fontSize: 14,
                                                 color: Colors.grey[600],
@@ -194,11 +230,9 @@ class CartPage extends StatelessWidget {
                                     ),
                                   ),
 
-                                  // Quantity Controls - Wrap with GestureDetector to prevent navigation when tapping quantity controls
+                                  // Quantity Controls
                                   GestureDetector(
-                                    onTap: () {
-                                      // Empty onTap to prevent navigation when tapping quantity controls
-                                    },
+                                    onTap: () {},
                                     child: Container(
                                       decoration: BoxDecoration(
                                         color: Colors.grey[100],
@@ -239,7 +273,6 @@ class CartPage extends StatelessWidget {
                               ),
                             ),
 
-                            // Divider for multiple items of same product
                             if (index < cartItems.length - 1)
                               Divider(height: 1, color: Colors.grey[300]),
                           ],
@@ -270,7 +303,8 @@ class CartPage extends StatelessWidget {
                         ),
                         TextButton(
                           onPressed: () {
-                            // Edit address functionality
+                            // Navigate to profile to edit address
+                            Get.toNamed(RouteHelper.getUserProfilePage());
                           },
                           child: Text(
                             'EDIT',
@@ -284,13 +318,46 @@ class CartPage extends StatelessWidget {
                       ],
                     ),
                     SizedBox(height: 8),
-                    Text(
-                      '2118 Thornridge Cir, Syracuse',
+                    _isLoadingAddress
+                        ? Row(
+                      children: [
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Loading address...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    )
+                        : Text(
+                      _userAddress,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
+                        color: _userAddress == 'Address not set' || _userAddress == 'Address not available'
+                            ? Colors.orange
+                            : Colors.black,
                       ),
                     ),
+                    if (_userAddress == 'Address not set' || _userAddress == 'Address not available')
+                      Padding(
+                        padding: EdgeInsets.only(top: 8),
+                        child: Text(
+                          'Please set your delivery address to place an order',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.orange,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -313,7 +380,6 @@ class CartPage extends StatelessWidget {
                         ),
                         TextButton(
                           onPressed: () {
-                            // Show breakdown
                             _showBreakdownDialog(context, cartController);
                           },
                           child: Text(
@@ -330,17 +396,59 @@ class CartPage extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Place order functionality
+                        onPressed: _userAddress == 'Address not set' || _userAddress == 'Address not available'
+                            ? () {
                           Get.snackbar(
-                            'Order Placed',
-                            'Your order has been placed successfully!',
-                            backgroundColor: Colors.green,
+                            'Address Required',
+                            'Please set your delivery address first',
+                            backgroundColor: Colors.orange,
                             colorText: Colors.white,
+                          );
+                          Get.toNamed(RouteHelper.getUserProfilePage());
+                        }
+                            : () async {
+                          // Show the order confirmation modal instead of directly placing order
+                          Get.dialog(
+                            OrderConfirmationModal(
+                              subtotal: cartController.totalAmount,
+                              onConfirm: (acceptDeliveryCost, deliveryType) async {
+                                if (acceptDeliveryCost) {
+                                  // Show loading dialog
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (context) => Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  );
+
+                                  try {
+                                    // Place order with delivery information - NOW USING PUBLIC METHOD
+                                    await cartController.placeOrderWithDelivery(deliveryType);
+                                    Navigator.pop(context); // Close loading dialog
+
+                                    if (cartController.getItems.isEmpty) {
+                                      Get.offAll(() => OrderSuccessPage());
+                                    }
+                                  } catch (e) {
+                                    Navigator.pop(context); // Close loading dialog
+                                    Get.snackbar(
+                                      'Order Failed',
+                                      'Failed to place order. Please try again.',
+                                      backgroundColor: Colors.red,
+                                      colorText: Colors.white,
+                                    );
+                                  }
+                                }
+                              },
+                            ),
+                            barrierDismissible: false,
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
+                          backgroundColor: _userAddress == 'Address not set' || _userAddress == 'Address not available'
+                              ? Colors.grey
+                              : AppColors.iSecondaryColor ?? Colors.blue,
                           foregroundColor: Colors.white,
                           padding: EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -348,7 +456,9 @@ class CartPage extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          'PLACE ORDER',
+                          _userAddress == 'Address not set' || _userAddress == 'Address not available'
+                              ? 'SET ADDRESS TO ORDER'
+                              : 'PLACE ORDER',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -405,6 +515,59 @@ class CartPage extends StatelessWidget {
             child: Text('OK'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class OrderSuccessPage extends StatelessWidget {
+  const OrderSuccessPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: 80,
+            ),
+            SizedBox(height: 24),
+            Text(
+              'Order Placed Successfully!',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Your order has been confirmed and saved to the database.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () {
+                Get.offAllNamed(RouteHelper.getInitialPage());
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              ),
+              child: Text('Continue Shopping'),
+            ),
+          ],
+        ),
       ),
     );
   }

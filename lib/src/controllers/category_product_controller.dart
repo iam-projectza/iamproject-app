@@ -20,16 +20,16 @@ class CategoryProductController extends GetxController {
   List<CategoryModel> _categoryProductList = [];
   List<CategoryModel> get categoryProductList => _categoryProductList;
 
-  List<CategoryModel> _wishlist = [];
+  final List<CategoryModel> _wishlist = [];
   List<CategoryModel> get wishlist => _wishlist;
 
   bool _isLoaded = false;
   bool get isLoaded => _isLoaded;
 
-  int _quantity = 0;
+  final int _quantity = 0;
   int get quantity => _quantity;
 
-  int _inCartItems = 0;
+  final int _inCartItems = 0;
   int get inCartItems => _inCartItems + _quantity;
 
   bool isInWishlist(CategoryModel category) {
@@ -104,7 +104,7 @@ class CategoryProductController extends GetxController {
 
       try {
         if (product.image != null && product.image!.isNotEmpty) {
-          final imageUrl = AppConstants.BASE_URL + '/' + product.image!;
+          final imageUrl = '${AppConstants.BASE_URL}/${product.image!}';
           print("Preloading image: $imageUrl");
           await precacheImageWithRetry(imageUrl, Get.context!);
         }

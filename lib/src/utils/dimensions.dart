@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 
 class Dimensions {
   static double get screenheight => Get.height;

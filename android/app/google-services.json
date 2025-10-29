@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "116913092906",
+    "project_id": "iam-project-b5b19",
+    "storage_bucket": "iam-project-b5b19.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:116913092906:android:df6f407f8759af3abbc653",
+        "android_client_info": {
+          "package_name": "za.co.iamproject.iam"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1k7qLOz1Jw1Z7DHwr0mHtDc0Xj7u3Kio"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

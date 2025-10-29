@@ -1,4 +1,3 @@
-import '../utils/app_constants.dart';
 
 class WishlistItem {
   final String address;

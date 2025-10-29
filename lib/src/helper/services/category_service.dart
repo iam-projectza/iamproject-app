@@ -1,9 +1,11 @@
 import 'package:get/get.dart';
 import '../../model/category_product_model.dart';
 
-class CategoryService extends GetxController {  // CHANGE: GetxService → GetxController
+class CategoryService extends GetxController {
   final Map<int, String> _categoryNames = {};
   final Map<String, int> _categoryIds = {};
+
+  bool get isLoaded => _categoryNames.isNotEmpty;
 
   void loadCategories(List<CategoryModel> categories) {
     print('Loading ${categories.length} categories into service');
@@ -11,43 +13,30 @@ class CategoryService extends GetxController {  // CHANGE: GetxService → GetxC
     _categoryIds.clear();
 
     for (var category in categories) {
-      if (category.id != null && category.name != null) {
+      if (category.id != null && category.name != null && category.name!.isNotEmpty) {
         _categoryNames[category.id!] = category.name!;
         _categoryIds[category.name!] = category.id!;
         print('Loaded category: ${category.id} -> ${category.name}');
+      } else {
+        print('Skipped invalid category: id=${category.id}, name=${category.name}');
       }
     }
     print('Total categories in service: ${_categoryNames.length}');
-    update(); // ADD THIS: Notify listeners when categories are loaded
+    update();
   }
 
   String getCategoryName(int? categoryId) {
     if (categoryId == null) {
-      print('Category ID is null');
       return 'Uncategorized';
     }
-
-    final name = _categoryNames[categoryId];
-    print('Looking up category $categoryId -> $name');
-
-    return name ?? 'Uncategorized';
+    return _categoryNames[categoryId] ?? 'Uncategorized';
   }
 
   int? getCategoryIdByName(String? categoryName) {
-    if (categoryName == null) {
-      print('Category name is null');
+    if (categoryName == null || categoryName.isEmpty) {
       return null;
     }
-
-    final id = _categoryIds[categoryName];
-    print('Looking up category "$categoryName" -> $id');
-
-    if (id == null) {
-      print('Category "$categoryName" not found in service. Available categories:');
-      _categoryNames.forEach((id, name) => print('  $id: $name'));
-    }
-
-    return id;
+    return _categoryIds[categoryName];
   }
 
   @override

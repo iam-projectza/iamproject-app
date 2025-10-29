@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../constants/colors.dart';
+import '../../controllers/cart_controller.dart';
 import '../../controllers/single_product_controller.dart';
 import '../../model/single_product_model.dart';
 import '../../routes/route_helper.dart';
@@ -39,29 +40,56 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
       backgroundColor: AppColors.mainColor,
       colorText: Colors.white,
     );
-    Get.toNamed(RouteHelper.getInitialPage());
   }
 
+  // ✅ REAL ADD TO CART LOGIC
   void _addToCart(SingleProductModel product) {
-    Get.snackbar(
-      'Cart',
-      '${product.name} added to cart!',
-      backgroundColor: AppColors.mainColor,
-      colorText: Colors.white,
-    );
+    if (product.id == null) {
+      Get.snackbar('Error', 'Invalid product', backgroundColor: Colors.red, colorText: Colors.white);
+      return;
+    }
+
+    try {
+      final cartController = Get.find<CartController>();
+      cartController.addItem(product, quantity);
+
+      Get.snackbar(
+        'Added to Cart',
+        '${product.name ?? "Product"} × $quantity',
+        backgroundColor: AppColors.mainColor,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Cart Error',
+        'Failed to add item. Make sure cart is initialized.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      print('Add to cart error: $e');
+    }
   }
 
+  // ✅ Robust image URL handling (fixes "Invalid image data")
   String getFullImageUrl(String? imagePath) {
-    if (imagePath == null || imagePath.isEmpty) return "";
-    if (imagePath.startsWith("http")) return imagePath;
-    return "${AppConstants.BASE_URL}/${imagePath.replaceAll(RegExp(r'^/+'), '')}";
+    if (imagePath == null || imagePath.isEmpty || imagePath == 'null') {
+      return ''; // Return empty to trigger fallback
+    }
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    // Remove leading slashes to avoid double slashes
+    String cleanPath = imagePath.replaceAll(RegExp(r'^/'), '');
+    if (AppConstants.BASE_URL == null) {
+      return '';
+    }
+    return '${AppConstants.BASE_URL}/$cleanPath';
   }
 
   @override
   Widget build(BuildContext context) {
-    var controller = Get.find<SingleProductController>();
+    final controller = Get.find<SingleProductController>();
 
-    // ADDED: Check if data is loaded
     if (!controller.isLoaded) {
       return Scaffold(
         backgroundColor: AppColors.bg2Color,
@@ -69,18 +97,17 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
       );
     }
 
-    // FIXED: Find product by ID instead of using pageId as index
+    // Find product by ID (not index)
     SingleProductModel? product;
     try {
       product = controller.singleProductList.firstWhere(
             (p) => p.id == widget.pageId,
-        orElse: () => SingleProductModel(), // Return empty product if not found
+        orElse: () => SingleProductModel(),
       );
     } catch (e) {
       print('Error finding product: $e');
     }
 
-    // Check if product was found and has an ID
     if (product == null || product.id == null) {
       return Scaffold(
         backgroundColor: AppColors.bg2Color,
@@ -92,25 +119,22 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
               SizedBox(height: 16),
               Text('Product not found', style: TextStyle(fontSize: 18)),
               SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => Get.back(),
-                child: Text('Go Back'),
-              ),
+              ElevatedButton(onPressed: Get.back, child: Text('Go Back')),
             ],
           ),
         ),
       );
     }
 
-    double price = product.price ?? 0.0;
-    String imageUrl = getFullImageUrl(product.image);
-    bool hasValidImage = imageUrl.isNotEmpty;
+    final double price = product.price ?? 0.0;
+    final String imageUrl = getFullImageUrl(product.image);
+    final bool hasValidImage = imageUrl.isNotEmpty;
 
     return Scaffold(
       backgroundColor: AppColors.bg2Color,
       body: Stack(
         children: [
-          // Background Image with null safety
+          // Background Image
           Positioned(
             top: 0,
             left: 0,
@@ -153,14 +177,13 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
             ),
           ),
 
-          // Scrollable content
+          // Scrollable Content
           CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    // Rounded container that overlaps the image
                     Container(
                       margin: EdgeInsets.only(top: Dimensions.popularFoodImgSize - 50),
                       decoration: BoxDecoration(
@@ -171,13 +194,14 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
                         ),
                       ),
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: Dimensions.width15, vertical: Dimensions.height20),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: Dimensions.width15,
+                          vertical: Dimensions.height20,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            AppColumn(
-                              text: product.name ?? 'No Name',
-                            ),
+                            AppColumn(text: product.name ?? 'No Name'),
                             SizedBox(height: Dimensions.height20),
                             BigText(text: "Details:", color: AppColors.white),
                             SizedBox(height: Dimensions.height10),
@@ -187,11 +211,11 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
                             ),
                             SizedBox(height: Dimensions.height10),
                             ExpandableTextWidget(
-                              text: product.description ?? 'No description available for this product.',
+                              text: product.description ?? 'No description available.',
                             ),
                             SizedBox(height: Dimensions.height20),
 
-                            // Quantity Controls
+                            // Quantity Selector
                             Row(
                               children: [
                                 Container(
@@ -200,11 +224,16 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
                                     borderRadius: BorderRadius.circular(45),
                                     color: AppColors.iCardBgColor,
                                   ),
-                                  padding: EdgeInsets.symmetric(horizontal: Dimensions.width15, vertical: 5),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: Dimensions.width15,
+                                    vertical: 5,
+                                  ),
                                   child: Row(
                                     children: [
                                       InkWell(
-                                        onTap: () { if (quantity > 1) setState(() => quantity--); },
+                                        onTap: () {
+                                          if (quantity > 1) setState(() => quantity--);
+                                        },
                                         child: Icon(Icons.remove, color: AppColors.white, size: 15),
                                       ),
                                       SizedBox(width: Dimensions.width20),
@@ -221,7 +250,7 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
                             ),
                             SizedBox(height: Dimensions.height30),
 
-                            // Recommended Groceries Slider
+                            // Recommended Groceries
                             Text(
                               "Recommended Groceries",
                               style: TextStyle(
@@ -241,17 +270,13 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
                                   return Container(
                                     width: 130,
                                     margin: EdgeInsets.only(right: Dimensions.width10),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(10),
                                       child: Stack(
                                         children: [
                                           Image.asset(
                                             item["image"],
-                                            width: double.infinity,
-                                            height: double.infinity,
                                             fit: BoxFit.cover,
                                             errorBuilder: (context, error, stackTrace) {
                                               return Container(
@@ -261,8 +286,6 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
                                             },
                                           ),
                                           Container(
-                                            width: double.infinity,
-                                            height: double.infinity,
                                             decoration: BoxDecoration(
                                               gradient: LinearGradient(
                                                 begin: Alignment.bottomCenter,
@@ -300,6 +323,7 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
             ],
           ),
 
+          // Top App Bar Icons
           Positioned(
             top: 0,
             left: 0,
@@ -316,9 +340,7 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       GestureDetector(
-                        onTap: () {
-                          Get.back();
-                        },
+                        onTap: Get.back,
                         child: HelperIcon(
                           icon: Icons.arrow_back,
                           size: Dimensions.iconSize16,
@@ -358,7 +380,7 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
         ],
       ),
 
-      // Bottom Add to Cart Bar
+      // ✅ REAL ADD TO CART BUTTON
       bottomNavigationBar: Container(
         padding: EdgeInsets.all(Dimensions.height20),
         color: AppColors.iPrimaryColor,
@@ -375,8 +397,14 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Add $quantity to order • ', style: TextStyle(color: Colors.white)),
-              Text('R ${(price * quantity).toStringAsFixed(2)}', style: TextStyle(color: Colors.white)),
+              Text(
+                'Add $quantity to order • ',
+                style: TextStyle(color: Colors.white),
+              ),
+              Text(
+                'R${(price * quantity).toStringAsFixed(2)}',
+                style: TextStyle(color: Colors.white),
+              ),
             ],
           ),
         ),
