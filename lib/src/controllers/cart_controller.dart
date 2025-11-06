@@ -3,21 +3,29 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/colors.dart';
 import '../data/repository/cart_repo.dart';
+import '../data/repository/orders_repo.dart';
 import '../model/cart_model.dart';
 import '../model/single_product_model.dart';
-import '../pages/cart/cart_page.dart';
 import '../routes/route_helper.dart';
+import '../services/user_spending_service.dart';
 import '../utils/app_constants.dart';
 import '../widgets/order_confirmation_modal.dart';
 import 'auth/firebase/authenication_repository.dart';
+import 'wishlist_controller.dart';
 
 class CartController extends GetxController {
   final CartRepo cartRepo;
-  CartController({required this.cartRepo});
+  final OrderRepo orderRepo;
+  CartController({
+    required this.cartRepo,
+    required this.orderRepo, // Update this
+  });
 
   Map<int, CartModel> _items = {};
   Map<int, CartModel> get items => _items;
   List<CartModel> storageItems = [];
+
+  final UserSpendingService _spendingService = Get.find<UserSpendingService>();
 
   // Enhanced method to get user data
   Map<String, dynamic> _getUserData() {
@@ -72,20 +80,6 @@ class CartController extends GetxController {
       print('❌ Error getting Firebase user: $e');
     }
 
-    // Third try: Get from Firestore via AuthenticationRepository
-    try {
-      final authRepo = Get.find<AuthenticationRepository>();
-      final user = authRepo.firebaseUser.value;
-
-      if (user != null) {
-        print('🔍 Attempting to fetch user data from Firestore...');
-        // This would be async, but we can't make this method async
-        // So we rely on the local storage which should have been populated
-      }
-    } catch (e) {
-      print('❌ Error accessing Firestore data: $e');
-    }
-
     // Final fallback
     print('⚠️ Using fallback customer data - no user data found');
     return {
@@ -106,81 +100,10 @@ class CartController extends GetxController {
     }
   }
 
-  // Method to ensure user profile is complete before ordering
-  Future<void> ensureUserProfileUpdated() async {
-    try {
-      print('🔍 Checking user profile completeness...');
-
-      final userData = _getUserData();
-
-      if (userData['name'] == 'Customer' || userData['email'] == 'customer@example.com') {
-        print('⚠️ User profile incomplete - prompting for update');
-
-        // You could navigate to profile page here
-        Get.snackbar(
-          'Profile Incomplete',
-          'Please update your profile before placing an order',
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-        );
-      } else {
-        print('✅ User profile is complete');
-        print('   - Name: ${userData['name']}');
-        print('   - Email: ${userData['email']}');
-      }
-    } catch (e) {
-      print('❌ Error checking user profile: $e');
-    }
-  }
-
-  // Debug method to check user state
-  void debugUserState() {
-    print('\n=== USER STATE DEBUG ===');
-
-    // Check local storage
-    try {
-      final sharedPreferences = Get.find<SharedPreferences>();
-      String? storedName = sharedPreferences.getString('user_name');
-      String? storedEmail = sharedPreferences.getString('user_email');
-
-      print('📋 Local Storage:');
-      print('   - Name: $storedName');
-      print('   - Email: $storedEmail');
-    } catch (e) {
-      print('❌ Local storage error: $e');
-    }
-
-    // Check Firebase Auth
-    try {
-      final authRepo = Get.find<AuthenticationRepository>();
-      final user = authRepo.firebaseUser.value;
-
-      print('🔥 Firebase Auth:');
-      print('   - User: ${user != null ? "Logged In" : "Not Logged In"}');
-      if (user != null) {
-        print('   - UID: ${user.uid}');
-        print('   - Display Name: ${user.displayName}');
-        print('   - Email: ${user.email}');
-        print('   - Email Verified: ${user.emailVerified}');
-      }
-    } catch (e) {
-      print('❌ Firebase Auth error: $e');
-    }
-
-    // Test _getUserData method
-    print('🎯 _getUserData() result:');
-    Map<String, dynamic> userData = _getUserData();
-    print('   - Name: ${userData['name']}');
-    print('   - Email: ${userData['email']}');
-
-    print('=== END USER DEBUG ===\n');
-  }
-
   int get totalItemsCount {
     return _items.values.fold(0, (sum, item) => sum + (item.quantity ?? 0));
   }
 
-  // Add this debug method to CartController
   void debugCartState() {
     print('\n=== CART STATE DEBUG ===');
     print('Total items in cart: ${_items.length}');
@@ -196,7 +119,6 @@ class CartController extends GetxController {
       });
     }
 
-    // Check if GetX is working
     print('GetX is registered: ${Get.isRegistered<CartController>()}');
     print('=== END CART DEBUG ===\n');
   }
@@ -305,7 +227,6 @@ class CartController extends GetxController {
     }
   }
 
-  // In CartController
   Future<void> showOrderConfirmation() async {
     try {
       if (_items.isEmpty) {
@@ -343,7 +264,6 @@ class CartController extends GetxController {
     }
   }
 
-  // REMOVED DUPLICATE METHOD - KEEP ONLY THIS ONE
   Future<void> placeOrderWithDelivery(String deliveryType) async {
     try {
       print('🚚 Placing order with delivery type: $deliveryType');
@@ -355,7 +275,17 @@ class CartController extends GetxController {
       print('   Delivery cost: R$deliveryCost');
       print('   Final total: R$finalTotal');
 
-      // Place the order (your existing placeOrder method)
+      // Check spending limit first
+      final spendingCheck = await checkSpendingLimit();
+
+      if (!spendingCheck.canProceed) {
+        print('❌ Order blocked: Monthly spending limit exceeded');
+        // This will show the spending limit dialog and return early
+        _showSpendingLimitExceededDialog(spendingCheck);
+        return; // Return early without placing order
+      }
+
+      // If we get here, spending limit is OK - place the order
       final result = await placeOrder();
 
       if (result != null) {
@@ -371,7 +301,17 @@ class CartController extends GetxController {
   bool existInCart(SingleProductModel product) {
     return _items.containsKey(product.id);
   }
+  Future<bool> checkSpendingBeforeOrder() async {
+    final spendingCheck = await checkSpendingLimit();
 
+    if (!spendingCheck.canProceed) {
+      print('❌ Order blocked by spending limit');
+      _showSpendingLimitExceededDialog(spendingCheck);
+      return false;
+    }
+
+    return true;
+  }
   int getQuantity(SingleProductModel product) {
     var quantity = 0;
     if (_items.containsKey(product.id)) {
@@ -424,10 +364,24 @@ class CartController extends GetxController {
     update();
   }
 
+  // Add spending limit check before placing order
+  Future<SpendingCheckResult> checkSpendingLimit() async {
+    return await _spendingService.checkOrderEligibility(totalAmount);
+  }
+
   Future<Map<String, dynamic>?> placeOrder() async {
     try {
       print('STARTING ORDER PLACEMENT PROCESS');
       _debugPrintCartItems('Before placing order');
+
+      // Check spending limit first
+      final spendingCheck = await checkSpendingLimit();
+
+      if (!spendingCheck.canProceed) {
+        print('❌ Order blocked: Monthly spending limit exceeded');
+        _showSpendingLimitExceededDialog(spendingCheck);
+        return null;
+      }
 
       if (_items.isEmpty) {
         print('Cannot place order: Cart is empty');
@@ -458,7 +412,7 @@ class CartController extends GetxController {
               TextButton(
                 onPressed: () {
                   Get.back();
-                  Get.toNamed(RouteHelper.getUserProfilePage()); // Navigate to profile page
+                  Get.toNamed(RouteHelper.getUserProfilePage());
                 },
                 child: Text('Set Address'),
               ),
@@ -469,15 +423,22 @@ class CartController extends GetxController {
       }
 
       Map<String, dynamic> orderData = _prepareOrderData();
-      // Update the delivery address with actual user address
       orderData['delivery_address'] = userAddress;
 
       print('📍 Using delivery address: $userAddress');
 
       print('Saving order to API database...');
-      final response = await cartRepo.placeOrder(orderData);
+      // Use orderRepo instead of ordersRepo
+      final response = await orderRepo.placeOrder(orderData);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        // Add this order amount to spending
+        final spendingAdded = await _spendingService.addSpending(totalAmount);
+
+        if (!spendingAdded) {
+          print('⚠️ Warning: Could not update spending record');
+        }
+
         print('ORDER PLACED SUCCESSFULLY IN DATABASE!');
         print('Order ID: ${response.body['order_id']}');
         print('Order Number: ${response.body['order_number']}');
@@ -494,7 +455,6 @@ class CartController extends GetxController {
           duration: Duration(seconds: 3),
         );
 
-        // Return the response data for navigation
         return response.body;
 
       } else {
@@ -513,6 +473,246 @@ class CartController extends GetxController {
       );
       return null;
     }
+  }
+
+  void _showSpendingLimitExceededDialog(SpendingCheckResult spendingCheck) {
+    Get.dialog(
+      AlertDialog(
+        title: Text('Monthly Spending Limit Exceeded'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'You have reached your monthly spending limit of R${spendingCheck.monthlyLimit}.',
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 10),
+            Text('📊 Spending Summary:'),
+            SizedBox(height: 8),
+            _buildSpendingRow('Current Spending:', 'R${spendingCheck.currentSpending.toStringAsFixed(2)}'),
+            _buildSpendingRow('Order Total:', 'R${spendingCheck.orderTotal.toStringAsFixed(2)}'),
+            _buildSpendingRow('Remaining Balance:', 'R${spendingCheck.remainingBalance.toStringAsFixed(2)}',
+                color: Colors.red),
+            _buildSpendingRow('Amount Over Limit:', 'R${spendingCheck.amountOverLimit.toStringAsFixed(2)}',
+                color: Colors.red),
+            SizedBox(height: 10),
+            Text(
+              'Please remove items totaling at least R${spendingCheck.amountOverLimit.toStringAsFixed(2)} to proceed.',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'Your spending limit will reset in ${spendingCheck.daysUntilReset} days.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Get.back(); // Close this dialog first
+              _showMoveToWishlistSuggestions(spendingCheck.amountOverLimit);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.iSecondaryColor,
+            ),
+            child: Text('Move Items to Wishlist'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  Widget _buildSpendingRow(String label, String value, {Color? color}) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 14)),
+          Text(value, style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: color,
+          )),
+        ],
+      ),
+    );
+  }
+
+// Add this method to your CartController
+  void moveItemToWishlistAndRemoveFromCart(int productId, int quantityToRemove) {
+    if (_items.containsKey(productId)) {
+      final item = _items[productId]!;
+      final currentQuantity = item.quantity ?? 0;
+
+      if (currentQuantity <= quantityToRemove) {
+        // Remove entire item if quantity to remove >= current quantity
+        if (item.product != null) {
+          final wishlistController = Get.find<WishlistController>();
+          wishlistController.toggleWishlist(item.product!);
+        }
+        removeItem(productId);
+      } else {
+        // Remove only part of the quantity
+        final newQuantity = currentQuantity - quantityToRemove;
+        updateQuantity(productId, newQuantity);
+
+        // Add to wishlist (you might want to create a method to add without removing)
+        if (item.product != null) {
+          final wishlistController = Get.find<WishlistController>();
+          // This will add the product to wishlist
+          wishlistController.addToWishlist(item.product!);
+        }
+      }
+
+      update();
+    }
+  }
+
+// Update the wishlist suggestion item to handle partial removal
+  Widget _buildWishlistSuggestionItem(CartModel item, double amountToRemove) {
+    final wishlistController = Get.find<WishlistController>();
+    final itemTotal = (item.price ?? 0) * (item.quantity ?? 1);
+
+    return Card(
+      margin: EdgeInsets.symmetric(vertical: 5),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundImage: item.img != null && item.img!.isNotEmpty
+              ? NetworkImage(item.img!)
+              : null,
+          child: item.img == null || item.img!.isEmpty
+              ? Icon(Icons.fastfood)
+              : null,
+        ),
+        title: Text(item.name ?? 'Unknown Product'),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('R${item.price?.toStringAsFixed(2)} each'),
+            if (item.quantity != null && item.quantity! > 1)
+              Text('Quantity: ${item.quantity}', style: TextStyle(fontSize: 12)),
+          ],
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Option to remove one item
+            if (item.quantity != null && item.quantity! > 1)
+              IconButton(
+                icon: Icon(Icons.remove_circle_outline, color: Colors.orange),
+                onPressed: () {
+                  if (item.product != null) {
+                    moveItemToWishlistAndRemoveFromCart(item.id!, 1);
+                    wishlistController.addToWishlist(item.product!);
+                    Get.snackbar(
+                      'Moved to Wishlist',
+                      '1 ${item.name} moved to wishlist',
+                      backgroundColor: Colors.green,
+                      colorText: Colors.white,
+                    );
+                    Get.back(); // Close the bottom sheet
+                  }
+                },
+                tooltip: 'Move 1 to wishlist',
+              ),
+            // Option to remove all items
+            IconButton(
+              icon: Icon(Icons.favorite_border, color: Colors.red),
+              onPressed: () {
+                if (item.product != null) {
+                  final quantityToRemove = item.quantity ?? 1;
+                  moveItemToWishlistAndRemoveFromCart(item.id!, quantityToRemove);
+                  Get.snackbar(
+                    'Moved to Wishlist',
+                    '${quantityToRemove} ${item.name} moved to wishlist',
+                    backgroundColor: Colors.green,
+                    colorText: Colors.white,
+                  );
+                  Get.back(); // Close the bottom sheet
+                }
+              },
+              tooltip: 'Move all to wishlist',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+// Update the method that shows wishlist suggestions
+  void _showMoveToWishlistSuggestions(double amountToRemove) {
+    // Sort items by price (highest first) to suggest removal
+    final sortedItems = _items.values.toList()
+      ..sort((a, b) => (b.price ?? 0).compareTo(a.price ?? 0));
+
+    Get.bottomSheet(
+      Container(
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Move Items to Wishlist',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'You need to free up R${amountToRemove.toStringAsFixed(2)}. Move items to wishlist:',
+              style: TextStyle(color: Colors.grey),
+            ),
+            SizedBox(height: 15),
+            ...sortedItems.take(3).map((item) => _buildWishlistSuggestionItem(item, amountToRemove)),
+            SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Get.back(),
+                    child: Text('Cancel'),
+                  ),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Get.back();
+                      Get.toNamed(RouteHelper.wishlistPage);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.iSecondaryColor,
+                    ),
+                    child: Text('View Wishlist'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+
+  // Add this to your debug methods
+  void debugSpendingStatus() {
+    _spendingService.debugSpendingStatus();
   }
 
   Map<String, dynamic> _prepareOrderData() {

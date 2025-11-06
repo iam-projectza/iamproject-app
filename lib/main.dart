@@ -6,6 +6,7 @@ import 'package:iam/src/controllers/order_controller.dart';
 import 'package:iam/src/helper/dependencies.dart' as dep;
 import 'package:iam/src/helper/services/category_service.dart';
 import 'package:iam/src/routes/route_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -19,7 +20,11 @@ Future<void> main() async {
   // Register core services early
   Get.put(AuthenticationRepository());
   Get.put(CategoryService());
+  final sharedPreferences = await SharedPreferences.getInstance();
+  Get.put(sharedPreferences);
 
+  // Initialize authentication and detect user changes
+  Get.put(AuthenticationRepository());
   // Initialize lightweight dependencies
   await dep.initLightweight();
 

@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import '../model/single_product_model.dart';
 import 'auth/firebase/authenication_repository.dart';
 
-
 class WishlistController extends GetxController {
   static WishlistController get instance => Get.find();
 
@@ -45,6 +44,43 @@ class WishlistController extends GetxController {
       );
     } finally {
       isLoading(false);
+    }
+  }
+
+  // ADD THIS METHOD: Add to wishlist without checking if it exists
+  Future<void> addToWishlist(SingleProductModel product) async {
+    try {
+      if (product.id == null) {
+        throw 'Product ID is required';
+      }
+
+      final bool isCurrentlyInWishlist = await _authRepo.isInWishlist(product.id!);
+
+      if (!isCurrentlyInWishlist) {
+        // Add to wishlist only if not already there
+        await _authRepo.addToWishlist(product);
+        _wishlistItems.add(product);
+
+        Get.snackbar(
+          'Added to Wishlist',
+          '${product.name} added to wishlist',
+          backgroundColor: Colors.pink,
+          colorText: Colors.white,
+        );
+      } else {
+        print('ℹ️ Product already in wishlist: ${product.name}');
+      }
+
+      update(); // Notify listeners
+
+    } catch (e) {
+      print('❌ Error adding to wishlist: $e');
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
   }
 

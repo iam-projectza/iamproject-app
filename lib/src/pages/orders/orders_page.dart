@@ -37,7 +37,7 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
     } catch (e) {
       print('❌ Error getting OrderController: $e');
       // Try to reinitialize if controller is not found
-      Get.lazyPut(() => OrderRepo(apiClient: Get.find()));
+      Get.lazyPut(() => OrderRepo(apiClient: Get.find(), sharedPreferences: Get.find(), ));
       Get.lazyPut(() => OrderController(orderRepo: Get.find()));
 
       final OrderController orderController = Get.find<OrderController>();
@@ -247,7 +247,7 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
           ElevatedButton(
             onPressed: () {
               // Try to reinitialize
-              Get.lazyPut(() => OrderRepo(apiClient: Get.find()));
+              Get.lazyPut(() => OrderRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
               Get.lazyPut(() => OrderController(orderRepo: Get.find()));
               setState(() {});
             },

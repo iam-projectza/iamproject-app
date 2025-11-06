@@ -15,6 +15,7 @@ import '../data/repository/cart_repo.dart';
 import '../data/repository/category_product_repo.dart';
 import '../data/repository/orders_repo.dart';
 import '../data/repository/single_product_repo.dart';
+import '../services/user_spending_service.dart';
 import '../utils/app_constants.dart';
 
 Future<void> initLightweight() async {
@@ -27,9 +28,9 @@ Future<void> initLightweight() async {
   Get.put(CategoryProductRepo(apiClient: Get.find()));
   Get.put(SingleProductRepo(apiClient: Get.find()));
   Get.put(CartRepo(sharedPreferences: sharedPreferences, apiClient: Get.find()));
-  Get.put(OrderRepo(apiClient: Get.find()));
+  Get.put(OrderRepo(apiClient: Get.find(), sharedPreferences: sharedPreferences));
   Get.put(AuthRepo(apiClient: Get.find(), sharedPreferences: sharedPreferences));
-
+  Get.put(UserSpendingService());
   // Services & Controllers
   Get.put(CategoryService());
   Get.put(SignUpController());
@@ -37,7 +38,7 @@ Future<void> initLightweight() async {
 
   Get.put(CategoryProductController(categoryProductRepo: Get.find()));
   Get.put(SingleProductController(singleProductRepo: Get.find()));
-  Get.put(CartController(cartRepo: Get.find()));
+  Get.put(CartController(cartRepo: Get.find(), orderRepo: Get.find(),));
   Get.put(OrderController(orderRepo: Get.find()));
   Get.put(AuthController(authRepo: Get.find()));
   Get.put(WishlistController()); // ✅ Ensure this is PUT, not lazyPut if used early

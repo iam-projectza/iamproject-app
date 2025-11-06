@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:iam/src/model/single_product_model.dart';
 
 class CartModel {
@@ -21,33 +23,63 @@ class CartModel {
     this.product,
   });
 
-  CartModel.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    name = json['name'];
-    price = json['price'] is int ? (json['price'] as int).toDouble() : json['price'];
-    img = json['img'];
-    quantity = json['quantity'];
-    isExist = json['isExist'];
-    time = json['time'];
+  // Convert to JSON string
+  String toJson() {
+    final Map<String, dynamic> data = {
+      'id': id,
+      'name': name,
+      'price': price,
+      'img': img,
+      'quantity': quantity,
+      'isExist': isExist,
+      'time': time,
+    };
 
-    // Handle product field - check if it's a Map before parsing
-    if (json['product'] != null && json['product'] is Map<String, dynamic>) {
-      product = SingleProductModel.fromJson(json['product']);
-    } else {
-      product = null;
+    // Include product data if available
+    if (product != null) {
+      data['product'] = {
+        'id': product!.id,
+        'name': product!.name,
+        'price': product!.price,
+        'image': product!.image,
+        'description': product!.description,
+        'category_id': product!.category_id,
+        'category_name': product!.category_name,
+        'stock': product!.stock,
+      };
     }
+
+    return jsonEncode(data);
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      "id": id,
-      "name": name,
-      "price": price,
-      "img": img,
-      "quantity": quantity,
-      "isExist": isExist,
-      "time": time,
-      "product": product?.toJson(), // Safe null access
-    };
+  // Create from JSON string
+  factory CartModel.fromJson(String jsonString) {
+    final Map<String, dynamic> data = jsonDecode(jsonString);
+
+    SingleProductModel? productModel;
+    if (data['product'] != null) {
+      final productData = data['product'];
+      productModel = SingleProductModel(
+        id: productData['id'],
+        name: productData['name'],
+        price: productData['price']?.toDouble(),
+        image: productData['image'],
+        description: productData['description'],
+        category_id: productData['category_id'],
+        category_name: productData['category_name'],
+        stock: productData['stock'],
+      );
+    }
+
+    return CartModel(
+      id: data['id'],
+      name: data['name'],
+      price: data['price']?.toDouble(),
+      img: data['img'],
+      quantity: data['quantity'],
+      isExist: data['isExist'],
+      time: data['time'],
+      product: productModel,
+    );
   }
 }

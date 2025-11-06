@@ -19,6 +19,13 @@ class OrderController extends GetxController {
 
   List<OrderModel> _orders = [];
   List<OrderModel> get orders => _orders;
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+  String _errorMessage = '';
+  String get errorMessage => _errorMessage;
+
+  bool _hasOrders = false;
+  bool get hasOrders => _hasOrders;
 
   List<OrderModel> get ongoingOrders =>
       _orders.where((order) => order.status == 'pending' || order.status == 'ongoing').toList();
@@ -29,8 +36,135 @@ class OrderController extends GetxController {
   List<OrderModel> get canceledOrders =>
       _orders.where((order) => order.status == 'cancelled' || order.status == 'canceled').toList();
 
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
+  Future<void> loadUserOrders() async {
+    try {
+      _isLoading = true;
+      _errorMessage = '';
+      update();
+
+      print('👤 LOADING ORDERS FOR CURRENT USER...');
+
+      final response = await orderRepo.getOrders();
+
+      if (response.statusCode == 200) {
+        if (response.body != null && response.body is List) {
+          final ordersData = response.body as List;
+          _orders = ordersData.map((orderData) => OrderModel.fromJson(orderData)).toList();
+          _hasOrders = _orders.isNotEmpty;
+
+          print('✅ USER ORDERS LOADED SUCCESSFULLY');
+          print('   - Number of orders: ${_orders.length}');
+          print('   - Has orders: $_hasOrders');
+
+          if (_hasOrders) {
+            print('   📋 ORDER SUMMARY:');
+            for (var order in _orders) {
+              print('      • Order #${order.orderNumber}: R${order.totalAmount} - ${order.status}');
+            }
+          } else {
+            print('   ℹ️ No orders found for current user');
+          }
+        } else {
+          _orders = [];
+          _hasOrders = false;
+          print('ℹ️ No orders data received from API');
+        }
+      } else {
+        _errorMessage = 'Failed to load orders: ${response.statusText}';
+        _orders = [];
+        _hasOrders = false;
+        print('❌ ERROR LOADING ORDERS: ${response.statusText}');
+      }
+    } catch (e) {
+      _errorMessage = 'Error loading orders: $e';
+      _orders = [];
+      _hasOrders = false;
+      print('❌ EXCEPTION LOADING ORDERS: $e');
+    } finally {
+      _isLoading = false;
+      update();
+    }
+  }
+
+  // Load order history for current user
+  Future<void> loadOrderHistory() async {
+    try {
+      _isLoading = true;
+      update();
+
+      print('📜 LOADING ORDER HISTORY FOR CURRENT USER...');
+
+      final response = await orderRepo.getOrderHistory();
+
+      if (response.statusCode == 200) {
+        if (response.body != null && response.body is List) {
+          final ordersData = response.body as List;
+          _orders = ordersData.map((orderData) => OrderModel.fromJson(orderData)).toList();
+          _hasOrders = _orders.isNotEmpty;
+
+          print('✅ ORDER HISTORY LOADED SUCCESSFULLY');
+          print('   - Number of historical orders: ${_orders.length}');
+        } else {
+          _orders = [];
+          _hasOrders = false;
+          print('ℹ️ No order history data received from API');
+        }
+      } else {
+        _errorMessage = 'Failed to load order history: ${response.statusText}';
+        _orders = [];
+        _hasOrders = false;
+      }
+    } catch (e) {
+      _errorMessage = 'Error loading order history: $e';
+      _orders = [];
+      _hasOrders = false;
+    } finally {
+      _isLoading = false;
+      update();
+    }
+  }
+
+  // Check if user has any orders
+  Future<void> checkUserHasOrders() async {
+    try {
+      _hasOrders = await orderRepo.hasOrders();
+      print('📊 USER ORDER CHECK RESULT: $_hasOrders');
+      update();
+    } catch (e) {
+      print('❌ ERROR CHECKING USER ORDERS: $e');
+      _hasOrders = false;
+      update();
+    }
+  }
+
+  // Clear orders (useful when user logs out)
+  void clearOrders() {
+    _orders.clear();
+    _hasOrders = false;
+    _errorMessage = '';
+    update();
+    print('🗑️ ORDERS CLEARED FOR USER');
+  }
+
+  // Refresh orders
+  Future<void> refreshOrders() async {
+    await loadUserOrders();
+  }
+
+  // Get order by ID (with user validation)
+  Future<OrderModel?> getOrderById(int orderId) async {
+    try {
+      final response = await orderRepo.getOrderById(orderId);
+      if (response.statusCode == 200) {
+        return OrderModel.fromJson(response.body);
+      }
+      return null;
+    } catch (e) {
+      print('❌ ERROR GETTING ORDER BY ID: $e');
+      return null;
+    }
+  }
+
 
   Future<void> fetchOrders() async {
     _isLoading = true;
@@ -119,12 +253,7 @@ class OrderController extends GetxController {
     _isLoading = false;
     update();
   }
-  // Add a method to refresh orders
-  Future<void> refreshOrders() async {
-    await fetchOrders();
-  }
 
-  // ... rest of your existing methods (placeOrderFromCart, updateOrderStatus, reorder, etc.)
   Future<void> placeOrderFromCart({
     required String customerName,
     required String customerEmail,

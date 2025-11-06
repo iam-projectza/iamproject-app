@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../model/single_product_model.dart';
+import '../../cart_controller.dart';
+import '../../wishlist_controller.dart';
 
 
 
@@ -106,23 +108,24 @@ class AuthenticationRepository extends GetxController {
 
   Future<String?> registerWithEmailAndPassword(String email, String password, Map<String, dynamic> userData) async {
     try {
+      // Clear any existing data
+      await clearPreviousUserData();
+
       final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // Get the newly created user
       final User? user = userCredential.user;
 
       if (user != null) {
-        // Update user profile with display name
         await user.updateDisplayName(userData['name']);
-
-        // Add user data to Firestore
         await _saveUserDataToFirestore(user.uid, userData);
-
-        // Store locally
+        await setCurrentUserId(user.uid); // Set current user ID
         await storeUserData(userData['name'], email);
+
+        // Clear and reload controllers for new user
+        await _reloadUserSpecificData();
 
         return null; // Success
       } else {
@@ -159,6 +162,9 @@ class AuthenticationRepository extends GetxController {
 
   Future<String?> loginWithEmailAndPassword(String email, String password) async {
     try {
+      // Clear previous user's cart data
+      await clearPreviousUserData();
+
       final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
@@ -167,7 +173,11 @@ class AuthenticationRepository extends GetxController {
       // Store user data locally after login
       final User? user = userCredential.user;
       if (user != null) {
+        await setCurrentUserId(user.uid); // Set current user ID
         await _storeUserDataLocally(user);
+
+        // Clear and reload controllers for new user
+        await _reloadUserSpecificData();
       }
 
       return null; // Success
@@ -186,6 +196,10 @@ class AuthenticationRepository extends GetxController {
       final sharedPreferences = await SharedPreferences.getInstance();
       await sharedPreferences.remove('user_name');
       await sharedPreferences.remove('user_email');
+      await sharedPreferences.remove('current_user_id');
+
+      // Clear cart and wishlist data
+      await clearPreviousUserData();
 
       await _auth.signOut();
       Get.offAllNamed('/login');
@@ -498,4 +512,75 @@ class AuthenticationRepository extends GetxController {
   signInWithGoogle() {
     // Implement Google Sign In here
   }
+
+  // In AuthenticationRepository, add these methods:
+
+// Clear previous user's data when logging in
+  Future<void> clearPreviousUserData() async {
+    try {
+      final sharedPreferences = await SharedPreferences.getInstance();
+
+      // Clear cart and wishlist data (they'll be reloaded for new user)
+      final keys = sharedPreferences.getKeys();
+      for (String key in keys) {
+        if (key.startsWith('cart_') || key.startsWith('cart_history_')) {
+          await sharedPreferences.remove(key);
+          print('🗑️ Cleared previous user data: $key');
+        }
+      }
+    } catch (e) {
+      print('❌ Error clearing previous user data: $e');
+    }
+  }
+
+// Set current user ID
+  Future<void> setCurrentUserId(String userId) async {
+    try {
+      final sharedPreferences = await SharedPreferences.getInstance();
+      await sharedPreferences.setString('current_user_id', userId);
+      print('👤 Current user set: $userId');
+    } catch (e) {
+      print('❌ Error setting current user: $e');
+    }
+  }
+
+// Get current user ID
+  String? getCurrentUserId() {
+    try {
+      final sharedPreferences = Get.find<SharedPreferences>();
+      return sharedPreferences.getString('current_user_id');
+    } catch (e) {
+      print('❌ Error getting current user: $e');
+      return null;
+    }
+  }
+
+// Update the login method to handle user switching
+
+// Update the registration method
+
+// Reload user-specific data
+  Future<void> _reloadUserSpecificData() async {
+    try {
+      // Reload cart controller
+      if (Get.isRegistered<CartController>()) {
+        final cartController = Get.find<CartController>();
+        cartController.clear(); // Clear current cart
+        cartController.setCart = cartController.getCartData(); // Reload user's cart
+      }
+
+      // Reload wishlist controller
+      if (Get.isRegistered<WishlistController>()) {
+        final wishlistController = Get.find<WishlistController>();
+        await wishlistController.loadWishlist(); // Reload user's wishlist
+      }
+
+      print('🔄 User-specific data reloaded');
+    } catch (e) {
+      print('❌ Error reloading user-specific data: $e');
+    }
+  }
+
+// Update logout to clear data
+
 }

@@ -1,16 +1,28 @@
-// lib/src/services/user_spending_service.dart
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class UserSpendingService extends GetxService {
+class UserSpendingService extends GetxController {
   static UserSpendingService get instance => Get.find();
 
-  final double _monthlySpendingLimit = 150.00; // R150 monthly limit
-  final int _resetPeriodDays = 30; // Reset every 30 days
+  final double _monthlySpendingLimit = 150.00;
+  final int _resetPeriodDays = 30;
 
   final RxDouble _currentSpending = 0.0.obs;
   final RxString _resetDate = ''.obs;
   final RxBool _isInitialized = false.obs;
+
+  // Get user-specific storage keys
+  String get _spendingKey {
+    final sharedPreferences = Get.find<SharedPreferences>();
+    final userId = sharedPreferences.getString('current_user_id') ?? 'anonymous';
+    return 'current_spending_$userId';
+  }
+
+  String get _resetDateKey {
+    final sharedPreferences = Get.find<SharedPreferences>();
+    final userId = sharedPreferences.getString('current_user_id') ?? 'anonymous';
+    return 'spending_reset_date_$userId';
+  }
 
   double get monthlySpendingLimit => _monthlySpendingLimit;
   double get currentSpending => _currentSpending.value;
@@ -23,13 +35,12 @@ class UserSpendingService extends GetxService {
     super.onInit();
     _initializeSpendingData();
   }
-
   Future<void> _initializeSpendingData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
       // Check if we need to reset (first time or period expired)
-      final lastReset = prefs.getString('spending_reset_date');
+      final lastReset = prefs.getString(_resetDateKey);
       final now = DateTime.now();
 
       if (lastReset == null) {
@@ -43,14 +54,14 @@ class UserSpendingService extends GetxService {
           // Reset period expired - start new cycle
           await _resetSpendingCycle(now);
         } else {
-          // Load existing spending data
-          _currentSpending.value = prefs.getDouble('current_spending') ?? 0.0;
+          // Load existing spending data for this user
+          _currentSpending.value = prefs.getDouble(_spendingKey) ?? 0.0;
           _resetDate.value = lastReset;
         }
       }
 
       _isInitialized.value = true;
-      print('💰 Spending service initialized:');
+      print('💰 Spending service initialized for user: ${_spendingKey}');
       print('   - Current spending: R${_currentSpending.value}');
       print('   - Remaining balance: R$remainingBalance');
       print('   - Reset date: $_resetDate');
@@ -58,7 +69,6 @@ class UserSpendingService extends GetxService {
 
     } catch (e) {
       print('❌ Error initializing spending service: $e');
-      // Set defaults on error
       _currentSpending.value = 0.0;
       _resetDate.value = DateTime.now().toIso8601String();
       _isInitialized.value = true;
@@ -71,10 +81,10 @@ class UserSpendingService extends GetxService {
     _currentSpending.value = 0.0;
     _resetDate.value = resetDate.toIso8601String();
 
-    await prefs.setDouble('current_spending', 0.0);
-    await prefs.setString('spending_reset_date', resetDate.toIso8601String());
+    await prefs.setDouble(_spendingKey, 0.0);
+    await prefs.setString(_resetDateKey, resetDate.toIso8601String());
 
-    print('🔄 Spending cycle reset: R0.00 available until next reset');
+    print('🔄 Spending cycle reset for user: ${_spendingKey}');
   }
 
   Future<bool> canSpendAmount(double amount) async {

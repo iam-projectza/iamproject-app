@@ -407,7 +407,14 @@ class _CartPageState extends State<CartPage> {
                           Get.toNamed(RouteHelper.getUserProfilePage());
                         }
                             : () async {
-                          // Show the order confirmation modal instead of directly placing order
+                          // Check spending limit BEFORE showing order confirmation
+                          final canProceed = await cartController.checkSpendingBeforeOrder();
+
+                          if (!canProceed) {
+                            return; // Stop here if over spending limit
+                          }
+
+                          // Only show order confirmation if spending limit is OK
                           Get.dialog(
                             OrderConfirmationModal(
                               subtotal: cartController.totalAmount,
@@ -423,15 +430,19 @@ class _CartPageState extends State<CartPage> {
                                   );
 
                                   try {
-                                    // Place order with delivery information - NOW USING PUBLIC METHOD
                                     await cartController.placeOrderWithDelivery(deliveryType);
-                                    Navigator.pop(context); // Close loading dialog
+
+                                    if (Navigator.canPop(context)) {
+                                      Navigator.pop(context);
+                                    }
 
                                     if (cartController.getItems.isEmpty) {
                                       Get.offAll(() => OrderSuccessPage());
                                     }
                                   } catch (e) {
-                                    Navigator.pop(context); // Close loading dialog
+                                    if (Navigator.canPop(context)) {
+                                      Navigator.pop(context);
+                                    }
                                     Get.snackbar(
                                       'Order Failed',
                                       'Failed to place order. Please try again.',

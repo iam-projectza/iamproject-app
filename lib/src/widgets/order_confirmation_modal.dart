@@ -1,4 +1,3 @@
-// lib/src/widgets/order_confirmation_modal.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -8,6 +7,8 @@ import '../utils/app_constants.dart';
 import '../utils/dimensions.dart';
 import '../widgets/big_text.dart';
 import '../widgets/small_text.dart';
+import '../controllers/cart_controller.dart'; // Add this import
+import '../services/user_spending_service.dart'; // Add this import
 
 class OrderConfirmationModal extends StatefulWidget {
   final double subtotal;
@@ -91,6 +92,10 @@ class _OrderConfirmationModalState extends State<OrderConfirmationModal> {
               ),
               SizedBox(height: height15),
 
+              // Spending Info (Add this section)
+              _buildSpendingInfo(),
+              SizedBox(height: height15),
+
               // Order Summary
               _buildOrderSummary(),
               SizedBox(height: height15),
@@ -113,6 +118,125 @@ class _OrderConfirmationModalState extends State<OrderConfirmationModal> {
           ),
         ),
       ),
+    );
+  }
+  Widget _buildSpendingInfo() {
+    return GetBuilder<UserSpendingService>(
+      builder: (spendingService) {
+        final spendingSummary = spendingService.getSpendingSummary();
+        final isOverLimit = spendingService.isOverLimit;
+        final remainingBalance = spendingService.remainingBalance;
+
+        return Container(
+          padding: EdgeInsets.all(Dimensions.width15 ?? 15),
+          decoration: BoxDecoration(
+            color: isOverLimit ? Colors.red[50] : Colors.blue[50],
+            borderRadius: BorderRadius.circular(Dimensions.radius15 ?? 15),
+            border: Border.all(color: isOverLimit ? Colors.red : Colors.blue),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                      Icons.account_balance_wallet,
+                      color: isOverLimit ? Colors.red : Colors.blue,
+                      size: 16
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Monthly Spending Limit',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: isOverLimit ? Colors.red[800] : Colors.blue[800],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8),
+              _buildSpendingProgress(spendingService),
+              SizedBox(height: 8),
+              Text(
+                'Remaining balance: R${remainingBalance.toStringAsFixed(2)}',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: remainingBalance > 0 ? Colors.green : Colors.red,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Resets in ${spendingSummary['daysUntilReset']} days',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+              if (isOverLimit) ...[
+                SizedBox(height: 8),
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning, color: Colors.red, size: 16),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'You have exceeded your monthly spending limit',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.red[800],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSpendingProgress(UserSpendingService service) {
+    final progress = service.currentSpending / service.monthlySpendingLimit;
+    final isOverLimit = service.isOverLimit;
+
+    return Column(
+      children: [
+        LinearProgressIndicator(
+          value: progress > 1.0 ? 1.0 : progress,
+          backgroundColor: Colors.grey[300],
+          valueColor: AlwaysStoppedAnimation<Color>(
+            isOverLimit ? Colors.red : Colors.blue,
+          ),
+        ),
+        SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'R${service.currentSpending.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 12,
+                color: isOverLimit ? Colors.red : Colors.black,
+              ),
+            ),
+            Text(
+              'R${service.monthlySpendingLimit.toStringAsFixed(2)}',
+              style: TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -143,7 +267,6 @@ class _OrderConfirmationModalState extends State<OrderConfirmationModal> {
                     ? 'FREE'
                     : 'R${deliveryCost.toStringAsFixed(2)}',
                 color: deliveryCost == 0 ? Colors.green : AppColors.mainBlackColor,
-
               ),
             ],
           ),
@@ -180,7 +303,6 @@ class _OrderConfirmationModalState extends State<OrderConfirmationModal> {
                   SmallText(
                     text: 'Free Delivery Applied!',
                     color: Colors.green,
-
                   ),
                 ],
               ),
@@ -235,7 +357,6 @@ class _OrderConfirmationModalState extends State<OrderConfirmationModal> {
                 SmallText(
                   text: 'Learn more about our delivery options',
                   color: AppColors.iSecondaryColor,
-
                 ),
               ],
             ),

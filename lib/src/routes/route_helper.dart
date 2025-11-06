@@ -74,17 +74,25 @@ class RouteHelper {
   GetPage(name: wishList, page: (){
    return WishListPage();
   }),
+  // In your routes, ensure controllers are properly reset
+// In your RouteHelper, update the cartPage binding:
   GetPage(
    name: cartPage,
    page: () => CartPage(),
    binding: BindingsBuilder(() {
     if (!Get.isRegistered<CartController>()) {
      Get.lazyPut(() => CartRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-     Get.lazyPut(() => CartController(cartRepo: Get.find()));
+     Get.lazyPut(() => OrderRepo(apiClient: Get.find(), sharedPreferences: Get.find())); // Update this line
+     Get.lazyPut(() => CartController(
+      cartRepo: Get.find(),
+      orderRepo: Get.find(), // Update this line
+     ));
     }
    }),
   ),
   // In route_helper.dart - update the ordersPage route
+  // Update the ordersPage route as well:
+  // Update the ordersPage binding:
   GetPage(
    name: ordersPage,
    page: () => OrdersPage(),
@@ -97,7 +105,10 @@ class RouteHelper {
     }
 
     if (!Get.isRegistered<OrderRepo>()) {
-     Get.lazyPut(() => OrderRepo(apiClient: Get.find()));
+     Get.lazyPut(() => OrderRepo(
+      apiClient: Get.find(),
+      sharedPreferences: Get.find(), // Add this
+     ));
     }
 
     if (!Get.isRegistered<OrderController>()) {
