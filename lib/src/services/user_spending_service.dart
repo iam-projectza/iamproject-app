@@ -61,14 +61,14 @@ class UserSpendingService extends GetxController {
       }
 
       _isInitialized.value = true;
-      print('💰 Spending service initialized for user: ${_spendingKey}');
+      print(' Spending service initialized for user: ${_spendingKey}');
       print('   - Current spending: R${_currentSpending.value}');
       print('   - Remaining balance: R$remainingBalance');
       print('   - Reset date: $_resetDate');
       print('   - Is over limit: $isOverLimit');
 
     } catch (e) {
-      print('❌ Error initializing spending service: $e');
+      print(' Error initializing spending service: $e');
       _currentSpending.value = 0.0;
       _resetDate.value = DateTime.now().toIso8601String();
       _isInitialized.value = true;
@@ -84,7 +84,7 @@ class UserSpendingService extends GetxController {
     await prefs.setDouble(_spendingKey, 0.0);
     await prefs.setString(_resetDateKey, resetDate.toIso8601String());
 
-    print('🔄 Spending cycle reset for user: ${_spendingKey}');
+    print(' Spending cycle reset for user: ${_spendingKey}');
   }
 
   Future<bool> canSpendAmount(double amount) async {
@@ -104,7 +104,7 @@ class UserSpendingService extends GetxController {
     final newTotal = _currentSpending.value + amount;
 
     if (newTotal > _monthlySpendingLimit) {
-      print('❌ Cannot add spending: Would exceed monthly limit');
+      print(' Cannot add spending: Would exceed monthly limit');
       return false;
     }
 
@@ -114,7 +114,7 @@ class UserSpendingService extends GetxController {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('current_spending', newTotal);
 
-    print('💸 Spending added: R$amount');
+    print(' Spending added: R$amount');
     print('   - New total: R${_currentSpending.value}');
     print('   - Remaining: R$remainingBalance');
 
@@ -132,14 +132,14 @@ class UserSpendingService extends GetxController {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('current_spending', _currentSpending.value);
 
-    print('💳 Spending refunded: R$amount');
+    print(' Spending refunded: R$amount');
     print('   - New total: R${_currentSpending.value}');
     print('   - Remaining: R$remainingBalance');
   }
 
   Future<void> forceResetSpending() async {
     await _resetSpendingCycle(DateTime.now());
-    print('🔄 Spending manually reset to R0.00');
+    print(' Spending manually reset to R0.00');
   }
 
   // Check if order can be placed with current cart total
@@ -186,12 +186,12 @@ class UserSpendingService extends GetxController {
 
   void debugSpendingStatus() {
     print('\n=== SPENDING STATUS DEBUG ===');
-    print('💰 Monthly Limit: R$_monthlySpendingLimit');
-    print('💸 Current Spending: R${_currentSpending.value}');
-    print('💳 Remaining Balance: R$remainingBalance');
-    print('📅 Reset Date: $_resetDate');
-    print('⏰ Days Until Reset: ${_getDaysUntilReset()}');
-    print('🚫 Is Over Limit: $isOverLimit');
+    print(' Monthly Limit: R$_monthlySpendingLimit');
+    print(' Current Spending: R${_currentSpending.value}');
+    print(' Remaining Balance: R$remainingBalance');
+    print(' Reset Date: $_resetDate');
+    print(' Days Until Reset: ${_getDaysUntilReset()}');
+    print(' Is Over Limit: $isOverLimit');
     print('=== END SPENDING DEBUG ===\n');
   }
 }

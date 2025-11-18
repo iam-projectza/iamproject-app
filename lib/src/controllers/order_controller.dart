@@ -14,7 +14,7 @@ class OrderController extends GetxController {
   final OrderRepo orderRepo;
 
   OrderController({required this.orderRepo}) {
-    print('🎯 ORDER CONTROLLER CREATED AND INITIALIZED');
+    print('ORDER CONTROLLER CREATED AND INITIALIZED');
   }
 
   List<OrderModel> _orders = [];
@@ -42,7 +42,7 @@ class OrderController extends GetxController {
       _errorMessage = '';
       update();
 
-      print('👤 LOADING ORDERS FOR CURRENT USER...');
+      print('LOADING ORDERS FOR CURRENT USER...');
 
       final response = await orderRepo.getOrders();
 
@@ -52,34 +52,34 @@ class OrderController extends GetxController {
           _orders = ordersData.map((orderData) => OrderModel.fromJson(orderData)).toList();
           _hasOrders = _orders.isNotEmpty;
 
-          print('✅ USER ORDERS LOADED SUCCESSFULLY');
+          print(' USER ORDERS LOADED SUCCESSFULLY');
           print('   - Number of orders: ${_orders.length}');
           print('   - Has orders: $_hasOrders');
 
           if (_hasOrders) {
-            print('   📋 ORDER SUMMARY:');
+            print('   ORDER SUMMARY:');
             for (var order in _orders) {
               print('      • Order #${order.orderNumber}: R${order.totalAmount} - ${order.status}');
             }
           } else {
-            print('   ℹ️ No orders found for current user');
+            print('    No orders found for current user');
           }
         } else {
           _orders = [];
           _hasOrders = false;
-          print('ℹ️ No orders data received from API');
+          print('ℹ No orders data received from API');
         }
       } else {
         _errorMessage = 'Failed to load orders: ${response.statusText}';
         _orders = [];
         _hasOrders = false;
-        print('❌ ERROR LOADING ORDERS: ${response.statusText}');
+        print(' ERROR LOADING ORDERS: ${response.statusText}');
       }
     } catch (e) {
       _errorMessage = 'Error loading orders: $e';
       _orders = [];
       _hasOrders = false;
-      print('❌ EXCEPTION LOADING ORDERS: $e');
+      print(' EXCEPTION LOADING ORDERS: $e');
     } finally {
       _isLoading = false;
       update();
@@ -92,7 +92,7 @@ class OrderController extends GetxController {
       _isLoading = true;
       update();
 
-      print('📜 LOADING ORDER HISTORY FOR CURRENT USER...');
+      print(' LOADING ORDER HISTORY FOR CURRENT USER...');
 
       final response = await orderRepo.getOrderHistory();
 
@@ -102,12 +102,12 @@ class OrderController extends GetxController {
           _orders = ordersData.map((orderData) => OrderModel.fromJson(orderData)).toList();
           _hasOrders = _orders.isNotEmpty;
 
-          print('✅ ORDER HISTORY LOADED SUCCESSFULLY');
+          print(' ORDER HISTORY LOADED SUCCESSFULLY');
           print('   - Number of historical orders: ${_orders.length}');
         } else {
           _orders = [];
           _hasOrders = false;
-          print('ℹ️ No order history data received from API');
+          print('ℹ No order history data received from API');
         }
       } else {
         _errorMessage = 'Failed to load order history: ${response.statusText}';
@@ -128,10 +128,10 @@ class OrderController extends GetxController {
   Future<void> checkUserHasOrders() async {
     try {
       _hasOrders = await orderRepo.hasOrders();
-      print('📊 USER ORDER CHECK RESULT: $_hasOrders');
+      print(' USER ORDER CHECK RESULT: $_hasOrders');
       update();
     } catch (e) {
-      print('❌ ERROR CHECKING USER ORDERS: $e');
+      print(' ERROR CHECKING USER ORDERS: $e');
       _hasOrders = false;
       update();
     }
@@ -143,7 +143,7 @@ class OrderController extends GetxController {
     _hasOrders = false;
     _errorMessage = '';
     update();
-    print('🗑️ ORDERS CLEARED FOR USER');
+    print(' ORDERS CLEARED FOR USER');
   }
 
   // Refresh orders
@@ -160,7 +160,7 @@ class OrderController extends GetxController {
       }
       return null;
     } catch (e) {
-      print('❌ ERROR GETTING ORDER BY ID: $e');
+      print(' ERROR GETTING ORDER BY ID: $e');
       return null;
     }
   }
@@ -170,12 +170,12 @@ class OrderController extends GetxController {
     _isLoading = true;
     update();
 
-    print('📡 FETCHING ORDERS FROM API...');
+    print(' FETCHING ORDERS FROM API...');
 
     try {
       Response response = await orderRepo.getOrders();
 
-      print('📥 ORDERS API RESPONSE:');
+      print(' ORDERS API RESPONSE:');
       print('   - Status Code: ${response.statusCode}');
       print('   - Response Type: ${response.body.runtimeType}');
 
@@ -191,7 +191,7 @@ class OrderController extends GetxController {
           // If response is directly a list
           ordersList = responseBody;
         } else {
-          print('❌ UNEXPECTED RESPONSE FORMAT: $responseBody');
+          print(' UNEXPECTED RESPONSE FORMAT: $responseBody');
           ordersList = [];
         }
 
@@ -200,8 +200,8 @@ class OrderController extends GetxController {
           try {
             return OrderModel.fromJson(item);
           } catch (e) {
-            print('❌ ERROR PARSING ORDER: $e');
-            print('❌ PROBLEMATIC ORDER DATA: $item');
+            print(' ERROR PARSING ORDER: $e');
+            print(' PROBLEMATIC ORDER DATA: $item');
             // Return a default order to prevent complete failure
             return OrderModel(
               orderNumber: 'ERROR-${DateTime.now().millisecondsSinceEpoch}',
@@ -215,7 +215,7 @@ class OrderController extends GetxController {
           }
         }).toList();
 
-        print('✅ ORDERS FETCHED SUCCESSFULLY:');
+        print(' ORDERS FETCHED SUCCESSFULLY:');
         print('   - Total Orders: ${_orders.length}');
         print('   - Ongoing: ${ongoingOrders.length}');
         print('   - Completed: ${completedOrders.length}');
@@ -227,8 +227,8 @@ class OrderController extends GetxController {
           print('   ${i + 1}. #${order.orderNumber} - ${order.status} - R${order.totalAmount}');
         }
       } else {
-        print('❌ FAILED TO FETCH ORDERS: ${response.statusCode}');
-        print('❌ Response Body: ${response.body}');
+        print(' FAILED TO FETCH ORDERS: ${response.statusCode}');
+        print('Response Body: ${response.body}');
 
         Get.snackbar(
           'Error',
@@ -238,7 +238,7 @@ class OrderController extends GetxController {
         );
       }
     } catch (e, stackTrace) {
-      print('💥 ERROR FETCHING ORDERS:');
+      print('ERROR FETCHING ORDERS:');
       print('   - Error: $e');
       print('   - Stack Trace: $stackTrace');
 
@@ -389,12 +389,12 @@ class OrderController extends GetxController {
   // Add this to your OrderController class
   void debugController() {
     print('=== ORDER CONTROLLER DEBUG ===');
-    print('✅ OrderController is registered: ${Get.isRegistered<OrderController>()}');
-    print('✅ OrderRepo is registered: ${Get.isRegistered<OrderRepo>()}');
-    print('✅ ApiClient is registered: ${Get.isRegistered<ApiClient>()}');
-    print('📊 Current orders count: ${_orders.length}');
-    print('🔄 Is loading: $_isLoading');
-    print('🏁 === DEBUG COMPLETE ===');
+    print('OrderController is registered: ${Get.isRegistered<OrderController>()}');
+    print('OrderRepo is registered: ${Get.isRegistered<OrderRepo>()}');
+    print('ApiClient is registered: ${Get.isRegistered<ApiClient>()}');
+    print('Current orders count: ${_orders.length}');
+    print(' Is loading: $_isLoading');
+    print(' === DEBUG COMPLETE ===');
   }
 }
 

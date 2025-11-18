@@ -65,11 +65,11 @@ class AuthenticationRepository extends GetxController {
       await sharedPreferences.setString('user_name', userName);
       await sharedPreferences.setString('user_email', userEmail);
 
-      print('✅ User data stored locally:');
+      print(' User data stored locally:');
       print('   - Name: $userName');
       print('   - Email: $userEmail');
     } catch (e) {
-      print('❌ Error storing user data locally: $e');
+      print(' Error storing user data locally: $e');
     }
   }
 
@@ -78,9 +78,9 @@ class AuthenticationRepository extends GetxController {
       final sharedPreferences = await SharedPreferences.getInstance();
       await sharedPreferences.setString('user_name', name);
       await sharedPreferences.setString('user_email', email);
-      print('✅ User data stored locally: $name, $email');
+      print(' User data stored locally: $name, $email');
     } catch (e) {
-      print('❌ Error storing user data: $e');
+      print(' Error storing user data: $e');
     }
   }
 
@@ -90,7 +90,7 @@ class AuthenticationRepository extends GetxController {
       String? name = sharedPreferences.getString('user_name');
       String? email = sharedPreferences.getString('user_email');
 
-      print('📋 Retrieved stored user data:');
+      print(' Retrieved stored user data:');
       print('   - Name: $name');
       print('   - Email: $email');
 
@@ -99,7 +99,7 @@ class AuthenticationRepository extends GetxController {
         'email': email,
       };
     } catch (e) {
-      print('❌ Error retrieving stored user data: $e');
+      print(' Error retrieving stored user data: $e');
       return {'name': null, 'email': null};
     }
   }
@@ -339,9 +339,9 @@ class AuthenticationRepository extends GetxController {
     try {
       final User? user = _auth.currentUser;
       if (user != null) {
-        print('🔥 Adding to Firebase wishlist: ${product.name}');
-        print('🔥 User ID: ${user.uid}');
-        print('🔥 Product ID: ${product.id}');
+        print(' Adding to Firebase wishlist: ${product.name}');
+        print(' User ID: ${user.uid}');
+        print(' Product ID: ${product.id}');
 
         final wishlistItem = {
           'product_id': product.id,
@@ -354,7 +354,7 @@ class AuthenticationRepository extends GetxController {
           'added_at': FieldValue.serverTimestamp(),
         };
 
-        print('🔥 Wishlist data: $wishlistItem');
+        print(' Wishlist data: $wishlistItem');
 
         await _firestore
             .collection('USERS')
@@ -363,13 +363,13 @@ class AuthenticationRepository extends GetxController {
             .doc(product.id.toString())
             .set(wishlistItem);
 
-        print('✅ SUCCESS: Product added to Firebase wishlist: ${product.name}');
+        print(' SUCCESS: Product added to Firebase wishlist: ${product.name}');
       } else {
-        print('❌ No user logged in');
+        print(' No user logged in');
         throw 'Please login to add items to wishlist';
       }
     } catch (e) {
-      print('❌ ERROR adding to Firebase wishlist: $e');
+      print(' ERROR adding to Firebase wishlist: $e');
       throw 'Failed to add to wishlist: $e';
     }
   }
@@ -379,8 +379,8 @@ class AuthenticationRepository extends GetxController {
     try {
       final User? user = _auth.currentUser;
       if (user != null) {
-        print('🗑️ Removing from Firebase wishlist: $productId');
-        print('🗑️ User ID: ${user.uid}');
+        print(' Removing from Firebase wishlist: $productId');
+        print(' User ID: ${user.uid}');
 
         await _firestore
             .collection('USERS')
@@ -389,13 +389,13 @@ class AuthenticationRepository extends GetxController {
             .doc(productId.toString())
             .delete();
 
-        print('✅ SUCCESS: Product removed from Firebase wishlist: $productId');
+        print(' SUCCESS: Product removed from Firebase wishlist: $productId');
       } else {
-        print('❌ No user logged in');
+        print(' No user logged in');
         throw 'Please login to manage wishlist';
       }
     } catch (e) {
-      print('❌ ERROR removing from Firebase wishlist: $e');
+      print(' ERROR removing from Firebase wishlist: $e');
       throw 'Failed to remove from wishlist: $e';
     }
   }
@@ -416,7 +416,7 @@ class AuthenticationRepository extends GetxController {
       }
       return false;
     } catch (e) {
-      print('❌ Error checking wishlist: $e');
+      print(' Error checking wishlist: $e');
       return false;
     }
   }
@@ -446,12 +446,12 @@ class AuthenticationRepository extends GetxController {
           );
         }).toList();
 
-        print('📋 Loaded ${wishlistItems.length} items from wishlist');
+        print(' Loaded ${wishlistItems.length} items from wishlist');
         return wishlistItems;
       }
       return [];
     } catch (e) {
-      print('❌ Error getting wishlist: $e');
+      print(' Error getting wishlist: $e');
       return [];
     }
   }
@@ -525,11 +525,11 @@ class AuthenticationRepository extends GetxController {
       for (String key in keys) {
         if (key.startsWith('cart_') || key.startsWith('cart_history_')) {
           await sharedPreferences.remove(key);
-          print('🗑️ Cleared previous user data: $key');
+          print(' Cleared previous user data: $key');
         }
       }
     } catch (e) {
-      print('❌ Error clearing previous user data: $e');
+      print(' Error clearing previous user data: $e');
     }
   }
 
@@ -538,9 +538,9 @@ class AuthenticationRepository extends GetxController {
     try {
       final sharedPreferences = await SharedPreferences.getInstance();
       await sharedPreferences.setString('current_user_id', userId);
-      print('👤 Current user set: $userId');
+      print(' Current user set: $userId');
     } catch (e) {
-      print('❌ Error setting current user: $e');
+      print(' Error setting current user: $e');
     }
   }
 
@@ -550,7 +550,7 @@ class AuthenticationRepository extends GetxController {
       final sharedPreferences = Get.find<SharedPreferences>();
       return sharedPreferences.getString('current_user_id');
     } catch (e) {
-      print('❌ Error getting current user: $e');
+      print(' Error getting current user: $e');
       return null;
     }
   }
@@ -575,9 +575,9 @@ class AuthenticationRepository extends GetxController {
         await wishlistController.loadWishlist(); // Reload user's wishlist
       }
 
-      print('🔄 User-specific data reloaded');
+      print('User-specific data reloaded');
     } catch (e) {
-      print('❌ Error reloading user-specific data: $e');
+      print(' Error reloading user-specific data: $e');
     }
   }
 

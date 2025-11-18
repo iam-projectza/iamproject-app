@@ -42,7 +42,7 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
     );
   }
 
-  // ✅ REAL ADD TO CART LOGIC
+  //  REAL ADD TO CART LOGIC
   void _addToCart(SingleProductModel product) {
     if (product.id == null) {
       Get.snackbar('Error', 'Invalid product', backgroundColor: Colors.red, colorText: Colors.white);
@@ -70,7 +70,7 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
     }
   }
 
-  // ✅ Robust image URL handling (fixes "Invalid image data")
+  //  Robust image URL handling (fixes "Invalid image data")
   String getFullImageUrl(String? imagePath) {
     if (imagePath == null || imagePath.isEmpty || imagePath == 'null') {
       return ''; // Return empty to trigger fallback
@@ -380,7 +380,7 @@ class _SingleProductDetailsState extends State<SingleProductDetails> {
         ],
       ),
 
-      // ✅ REAL ADD TO CART BUTTON
+      //  REAL ADD TO CART BUTTON
       bottomNavigationBar: Container(
         padding: EdgeInsets.all(Dimensions.height20),
         color: AppColors.iPrimaryColor,

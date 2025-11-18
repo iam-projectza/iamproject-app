@@ -30,15 +30,15 @@ class OrderRepo extends GetxService {
       endpoint = '${AppConstants.ORDERS_URI}?email=$_currentUserEmail';
     }
 
-    print('🚨 DEBUG - USER ORDER REQUEST:');
-    print('   📡 ENDPOINT: $endpoint');
-    print('   👤 CURRENT USER ID: $_currentUserId');
-    print('   📧 CURRENT USER EMAIL: $_currentUserEmail');
+    print(' DEBUG - USER ORDER REQUEST:');
+    print('ENDPOINT: $endpoint');
+    print('CURRENT USER ID: $_currentUserId');
+    print('CURRENT USER EMAIL: $_currentUserEmail');
 
     final response = await apiClient.getData(endpoint);
 
-    print('🚨 DEBUG - USER ORDER RESPONSE:');
-    print('   📊 STATUS CODE: ${response.statusCode}');
+    print('DEBUG - USER ORDER RESPONSE:');
+    print(' STATUS CODE: ${response.statusCode}');
 
     // Apply frontend filtering since backend isn't working
     if (response.statusCode == 200 && response.body != null && response.body is Map) {
@@ -46,7 +46,7 @@ class OrderRepo extends GetxService {
       if (responseData.containsKey('data') && responseData['data'] is List) {
         final allOrders = responseData['data'] as List;
 
-        print('   🔍 ORDERS BEFORE FILTERING: ${allOrders.length}');
+        print('ORDERS BEFORE FILTERING: ${allOrders.length}');
 
         // Filter orders by current user on frontend
         final userOrders = allOrders.where((order) {
@@ -59,18 +59,18 @@ class OrderRepo extends GetxService {
               (orderUserEmail != null && orderUserEmail == currentUserEmail);
 
           if (!matches) {
-            print('   🚫 FILTERED OUT ORDER:');
-            print('      • Order #${order['order_number']}');
-            print('      • Order Email: $orderUserEmail');
-            print('      • Order User ID: $orderUserId');
-            print('      • Current Email: $currentUserEmail');
-            print('      • Current User ID: $currentUserId');
+            print('    FILTERED OUT ORDER:');
+            print(' Order #${order['order_number']}');
+            print(' Order Email: $orderUserEmail');
+            print(' Order User ID: $orderUserId');
+            print(' Current Email: $currentUserEmail');
+            print('  Current User ID: $currentUserId');
           }
 
           return matches;
         }).toList();
 
-        print('   ✅ ORDERS AFTER FILTERING: ${userOrders.length}');
+        print('ORDERS AFTER FILTERING: ${userOrders.length}');
 
         // Create new response with filtered data
         final filteredResponse = Response(
@@ -94,40 +94,40 @@ class OrderRepo extends GetxService {
 
   // Place order - ensure user ID is included
   Future<Response> placeOrder(Map<String, dynamic> orderData) async {
-    print('🚀 ========== ORDER API CALL START ==========');
+    print(' ========== ORDER API CALL START ==========');
 
     // Add user ID to order data if available
     if (_currentUserId != null) {
       orderData['firebase_user_id'] = _currentUserId;
-      print('   👤 Firebase User ID: $_currentUserId');
+      print('Firebase User ID: $_currentUserId');
     }
 
     if (_currentUserEmail != null) {
       orderData['customer_email'] = _currentUserEmail;
-      print('   📧 Customer Email: $_currentUserEmail');
+      print('Customer Email: $_currentUserEmail');
     }
 
-    print('📦 ORDER PAYLOAD BEING SENT TO DATABASE:');
-    print('   - Customer Name: ${orderData['customer_name']}');
-    print('   - Customer Email: ${orderData['customer_email']}');
-    print('   - Firebase User ID: ${orderData['firebase_user_id'] ?? 'Not set'}');
+    print('ORDER PAYLOAD BEING SENT TO DATABASE:');
+    print('Customer Name: ${orderData['customer_name']}');
+    print(' Customer Email: ${orderData['customer_email']}');
+    print('Firebase User ID: ${orderData['firebase_user_id'] ?? 'Not set'}');
 
-    print('📤 SENDING REQUEST TO SERVER...');
+    print('SENDING REQUEST TO SERVER...');
 
     try {
       final response = await apiClient.postData(AppConstants.ORDERS_URI, orderData);
 
-      print('📥 ========== API RESPONSE RECEIVED ==========');
+      print('========== API RESPONSE RECEIVED ==========');
       print('   - Status Code: ${response.statusCode}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print('✅ ORDER SUCCESSFULLY SAVED TO DATABASE!');
+        print(' ORDER SUCCESSFULLY SAVED TO DATABASE!');
         if (response.body is Map) {
           print('   • Order ID: ${response.body['id'] ?? response.body['order_id']}');
           print('   • Order Number: ${response.body['order_number']}');
         }
       } else {
-        print('❌ ORDER FAILED TO SAVE TO DATABASE');
+        print('ORDER FAILED TO SAVE TO DATABASE');
         print('   • Error Status: ${response.statusCode}');
         print('   • Error Message: ${response.statusText}');
       }
@@ -135,7 +135,7 @@ class OrderRepo extends GetxService {
       return response;
 
     } catch (e, stackTrace) {
-      print('💥 ========== API CALL FAILED ==========');
+      print(' ========== API CALL FAILED ==========');
       print('   - Error: $e');
       print('   - Stack Trace: $stackTrace');
       rethrow;
@@ -153,7 +153,7 @@ class OrderRepo extends GetxService {
       endpoint = '${AppConstants.ORDERS_URI}/history?email=$_currentUserEmail';
     }
 
-    print('📜 FETCHING USER-SPECIFIC ORDER HISTORY');
+    print(' FETCHING USER-SPECIFIC ORDER HISTORY');
     print('   - User ID: $_currentUserId');
     print('   - User Email: $_currentUserEmail');
 
@@ -195,7 +195,7 @@ class OrderRepo extends GetxService {
 
   // Other methods remain the same...
   Future<Response> updateOrderStatus(int orderId, String status) async {
-    print('🔄 UPDATING ORDER STATUS:');
+    print(' UPDATING ORDER STATUS:');
     print('   - Order ID: $orderId');
     print('   - New Status: $status');
     print('   - User ID: $_currentUserId');
@@ -218,7 +218,7 @@ class OrderRepo extends GetxService {
       endpoint = '${AppConstants.ORDERS_URI}/$orderId?user_id=$_currentUserId';
     }
 
-    print('🔍 GETTING ORDER BY ID: $orderId');
+    print(' GETTING ORDER BY ID: $orderId');
     print('   - User ID: $_currentUserId');
 
     return await apiClient.getData(endpoint);
@@ -231,7 +231,7 @@ class OrderRepo extends GetxService {
       endpoint = '${AppConstants.ORDERS_URI}/$orderId?user_id=$_currentUserId';
     }
 
-    print('🗑️ DELETING ORDER: $orderId');
+    print(' DELETING ORDER: $orderId');
     print('   - User ID: $_currentUserId');
 
     return await apiClient.deleteData(endpoint);
@@ -247,7 +247,7 @@ class OrderRepo extends GetxService {
             responseData is Map &&
             responseData['data'] is List &&
             (responseData['data'] as List).isNotEmpty;
-        print('📊 USER ORDER CHECK:');
+        print(' USER ORDER CHECK:');
         print('   - User ID: $_currentUserId');
         print('   - Has Orders: $hasOrders');
         print('   - Number of Orders: ${hasOrders ? (responseData['data'] as List).length : 0}');
@@ -255,7 +255,7 @@ class OrderRepo extends GetxService {
       }
       return false;
     } catch (e) {
-      print('❌ ERROR CHECKING USER ORDERS: $e');
+      print(' ERROR CHECKING USER ORDERS: $e');
       return false;
     }
   }

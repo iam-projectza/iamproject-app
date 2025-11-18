@@ -29,7 +29,7 @@ class CartController extends GetxController {
 
   // Enhanced method to get user data
   Map<String, dynamic> _getUserData() {
-    print('🔍 Starting user data retrieval process...');
+    print(' Starting user data retrieval process...');
 
     // First try: Get from local storage (most reliable)
     try {
@@ -38,7 +38,7 @@ class CartController extends GetxController {
       String? storedEmail = sharedPreferences.getString('user_email');
 
       if (storedEmail != null && storedEmail.isNotEmpty) {
-        print('✅ User data found in local storage:');
+        print(' User data found in local storage:');
         print('   - Name: $storedName');
         print('   - Email: $storedEmail');
 
@@ -48,7 +48,7 @@ class CartController extends GetxController {
         };
       }
     } catch (e) {
-      print('❌ Error accessing local storage: $e');
+      print(' Error accessing local storage: $e');
     }
 
     // Second try: Get from Firebase Auth
@@ -57,7 +57,7 @@ class CartController extends GetxController {
       final user = authRepo.firebaseUser.value;
 
       if (user != null) {
-        print('✅ Firebase user found:');
+        print(' Firebase user found:');
         print('   - UID: ${user.uid}');
         print('   - Display Name: ${user.displayName}');
         print('   - Email: ${user.email}');
@@ -74,14 +74,14 @@ class CartController extends GetxController {
           'email': userEmail,
         };
       } else {
-        print('❌ No Firebase user currently logged in');
+        print(' No Firebase user currently logged in');
       }
     } catch (e) {
-      print('❌ Error getting Firebase user: $e');
+      print(' Error getting Firebase user: $e');
     }
 
     // Final fallback
-    print('⚠️ Using fallback customer data - no user data found');
+    print(' Using fallback customer data - no user data found');
     return {
       'name': 'Customer',
       'email': 'customer@example.com',
@@ -94,9 +94,9 @@ class CartController extends GetxController {
       final sharedPreferences = Get.find<SharedPreferences>();
       sharedPreferences.setString('user_name', name);
       sharedPreferences.setString('user_email', email);
-      print('💾 User data stored locally: $name, $email');
+      print(' User data stored locally: $name, $email');
     } catch (e) {
-      print('❌ Error storing user data locally: $e');
+      print(' Error storing user data locally: $e');
     }
   }
 
@@ -111,9 +111,9 @@ class CartController extends GetxController {
     print('Storage items: ${storageItems.length}');
 
     if (_items.isEmpty) {
-      print('❌ Cart is EMPTY');
+      print(' Cart is EMPTY');
     } else {
-      print('✅ Cart contains items:');
+      print(' Cart contains items:');
       _items.forEach((id, item) {
         print('   - ${item.name}: ${item.quantity} x R${item.price}');
       });
@@ -125,7 +125,7 @@ class CartController extends GetxController {
 
   void addItem(SingleProductModel product, int quantity) {
     try {
-      print('\n🛒 ADDING ITEM TO CART:');
+      print('\n ADDING ITEM TO CART:');
       print('   Product: ${product.name}');
       print('   Product ID: ${product.id}');
       print('   Quantity: $quantity');
@@ -134,7 +134,7 @@ class CartController extends GetxController {
 
       // Check if product is in stock
       if ((product.stock ?? 0) <= 0) {
-        print('❌ Cannot add item: Out of stock');
+        print(' Cannot add item: Out of stock');
         Get.snackbar(
           'Out of Stock',
           '${product.name} is currently out of stock',
@@ -147,7 +147,7 @@ class CartController extends GetxController {
       var totalQuantity = 0;
 
       if (_items.containsKey(product.id!)) {
-        print('🔄 Updating existing item in cart');
+        print(' Updating existing item in cart');
         _items.update(product.id!, (value) {
           totalQuantity = (value.quantity ?? 0) + quantity;
           print('   New quantity: $totalQuantity');
@@ -164,12 +164,12 @@ class CartController extends GetxController {
         });
 
         if (totalQuantity <= 0) {
-          print('🗑️ Removing item (quantity <= 0)');
+          print(' Removing item (quantity <= 0)');
           _items.remove(product.id);
         }
       } else {
         if (quantity > 0) {
-          print('➕ Adding new item to cart');
+          print(' Adding new item to cart');
           _items.putIfAbsent(product.id!, () {
             return CartModel(
               id: product.id,
@@ -183,7 +183,7 @@ class CartController extends GetxController {
             );
           });
         } else {
-          print('❌ Invalid quantity: $quantity');
+          print(' Invalid quantity: $quantity');
           Get.snackbar(
             'Item Count',
             'You should at least add 1 item',
@@ -195,13 +195,13 @@ class CartController extends GetxController {
       }
 
       // Save to storage
-      print('💾 Saving cart to storage...');
+      print(' Saving cart to storage...');
       cartRepo.addToCartList(getItems);
 
       // Force update
       update();
 
-      print('✅ Item added successfully!');
+      print('Item added successfully!');
       print('   Cart now has ${_items.length} items');
       print('   Total quantity: $totalItems');
 
@@ -217,7 +217,7 @@ class CartController extends GetxController {
       _debugPrintCartItems('After adding item');
 
     } catch (e) {
-      print('❌ ERROR in addItem: $e');
+      print(' ERROR in addItem: $e');
       Get.snackbar(
         'Error',
         'Failed to add item to cart',
@@ -254,7 +254,7 @@ class CartController extends GetxController {
       );
 
     } catch (e) {
-      print('❌ Error showing order confirmation: $e');
+      print(' Error showing order confirmation: $e');
       Get.snackbar(
         'Error',
         'Failed to process order confirmation',
@@ -266,7 +266,7 @@ class CartController extends GetxController {
 
   Future<void> placeOrderWithDelivery(String deliveryType) async {
     try {
-      print('🚚 Placing order with delivery type: $deliveryType');
+      print(' Placing order with delivery type: $deliveryType');
 
       // Calculate delivery cost
       double deliveryCost = _calculateDeliveryCost(deliveryType);
@@ -279,7 +279,7 @@ class CartController extends GetxController {
       final spendingCheck = await checkSpendingLimit();
 
       if (!spendingCheck.canProceed) {
-        print('❌ Order blocked: Monthly spending limit exceeded');
+        print(' Order blocked: Monthly spending limit exceeded');
         // This will show the spending limit dialog and return early
         _showSpendingLimitExceededDialog(spendingCheck);
         return; // Return early without placing order
@@ -294,7 +294,7 @@ class CartController extends GetxController {
       }
 
     } catch (e) {
-      print('❌ Error placing order with delivery: $e');
+      print('Error placing order with delivery: $e');
       rethrow;
     }
   }
@@ -305,7 +305,7 @@ class CartController extends GetxController {
     final spendingCheck = await checkSpendingLimit();
 
     if (!spendingCheck.canProceed) {
-      print('❌ Order blocked by spending limit');
+      print(' Order blocked by spending limit');
       _showSpendingLimitExceededDialog(spendingCheck);
       return false;
     }
@@ -378,7 +378,7 @@ class CartController extends GetxController {
       final spendingCheck = await checkSpendingLimit();
 
       if (!spendingCheck.canProceed) {
-        print('❌ Order blocked: Monthly spending limit exceeded');
+        print(' Order blocked: Monthly spending limit exceeded');
         _showSpendingLimitExceededDialog(spendingCheck);
         return null;
       }
@@ -395,7 +395,7 @@ class CartController extends GetxController {
       }
 
       // Get user address before placing order
-      print('📍 Fetching user delivery address...');
+      print(' Fetching user delivery address...');
       final userAddress = await getUserAddress();
 
       if (userAddress == 'Address not set' || userAddress == 'Address not available') {
@@ -425,7 +425,7 @@ class CartController extends GetxController {
       Map<String, dynamic> orderData = _prepareOrderData();
       orderData['delivery_address'] = userAddress;
 
-      print('📍 Using delivery address: $userAddress');
+      print(' Using delivery address: $userAddress');
 
       print('Saving order to API database...');
       // Use orderRepo instead of ordersRepo
@@ -436,7 +436,7 @@ class CartController extends GetxController {
         final spendingAdded = await _spendingService.addSpending(totalAmount);
 
         if (!spendingAdded) {
-          print('⚠️ Warning: Could not update spending record');
+          print(' Warning: Could not update spending record');
         }
 
         print('ORDER PLACED SUCCESSFULLY IN DATABASE!');
@@ -458,8 +458,8 @@ class CartController extends GetxController {
         return response.body;
 
       } else {
-        print('❌ Order failed with status: ${response.statusCode}');
-        print('❌ Response: ${response.body}');
+        print(' Order failed with status: ${response.statusCode}');
+        print(' Response: ${response.body}');
         throw Exception('API returned status code: ${response.statusCode}');
       }
 

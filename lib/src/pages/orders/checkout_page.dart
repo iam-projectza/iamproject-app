@@ -31,14 +31,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
     if (user != null) {
       _nameController.text = user.displayName ?? '';
       _emailController.text = user.email ?? '';
-      print('👤 User data pre-filled: ${user.displayName}');
+      print(' User data pre-filled: ${user.displayName}');
     } else {
-      print('❌ No user logged in');
+      print(' No user logged in');
     }
 
     // Debug cart contents
-    print('📦 Cart items at checkout: ${cartController.getItems.length}');
-    print('💰 Cart total: R${cartController.totalAmount}');
+    print(' Cart items at checkout: ${cartController.getItems.length}');
+    print(' Cart total: R${cartController.totalAmount}');
   }
 
   @override
@@ -181,40 +181,40 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   void _placeOrder() {
-    print('🔄 PLACE ORDER BUTTON CLICKED!');
-    print('📝 Form Data:');
+    print(' PLACE ORDER BUTTON CLICKED!');
+    print(' Form Data:');
     print('   - Name: ${_nameController.text}');
     print('   - Email: ${_emailController.text}');
     print('   - Address: ${_addressController.text}');
 
     if (_nameController.text.isEmpty) {
-      print('❌ VALIDATION FAILED: Name is empty');
+      print(' VALIDATION FAILED: Name is empty');
       Get.snackbar('Error', 'Please enter your name');
       return;
     }
     if (_emailController.text.isEmpty) {
-      print('❌ VALIDATION FAILED: Email is empty');
+      print(' VALIDATION FAILED: Email is empty');
       Get.snackbar('Error', 'Please enter your email');
       return;
     }
     if (_addressController.text.isEmpty) {
-      print('❌ VALIDATION FAILED: Address is empty');
+      print(' VALIDATION FAILED: Address is empty');
       Get.snackbar('Error', 'Please enter delivery address');
       return;
     }
 
-    print('✅ FORM VALIDATION PASSED - CALLING ORDER CONTROLLER');
+    print(' FORM VALIDATION PASSED - CALLING ORDER CONTROLLER');
 
     orderController.placeOrderFromCart(
       customerName: _nameController.text,
       customerEmail: _emailController.text,
       deliveryAddress: _addressController.text,
     ).then((_) {
-      print('🔄 ORDER PLACEMENT COMPLETED - NAVIGATING TO ORDERS PAGE');
+      print(' ORDER PLACEMENT COMPLETED - NAVIGATING TO ORDERS PAGE');
       // Navigate back to orders page after successful order
       Get.offAllNamed('/orders');
     }).catchError((error) {
-      print('❌ ORDER PLACEMENT FAILED: $error');
+      print(' ORDER PLACEMENT FAILED: $error');
     });
   }
 

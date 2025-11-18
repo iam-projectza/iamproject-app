@@ -29,13 +29,13 @@ Future<void> main() async {
   await dep.initLightweight();
 
   // Test OrderController registration
-  print('🧪 TESTING ORDER CONTROLLER REGISTRATION...');
+  print(' TESTING ORDER CONTROLLER REGISTRATION...');
   try {
     final orderController = Get.find<OrderController>();
-    print('✅ ORDER CONTROLLER SUCCESSFULLY REGISTERED');
-    print('   - OrderRepo: ${orderController.orderRepo != null ? "✅" : "❌"}');
+    print('ORDER CONTROLLER SUCCESSFULLY REGISTERED');
+    print('   - OrderRepo: ${orderController.orderRepo != null ? "" : ""}');
   } catch (e) {
-    print('❌ ORDER CONTROLLER REGISTRATION FAILED: $e');
+    print( 'ORDER CONTROLLER REGISTRATION FAILED: $e');
   }
 
   // Start heavy initialization in the background

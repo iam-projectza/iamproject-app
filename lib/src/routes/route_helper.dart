@@ -97,7 +97,7 @@ class RouteHelper {
    name: ordersPage,
    page: () => OrdersPage(),
    binding: BindingsBuilder(() {
-    print('🔧 Initializing dependencies for OrdersPage...');
+    print(' Initializing dependencies for OrdersPage...');
 
     // Ensure all dependencies are available
     if (!Get.isRegistered<ApiClient>()) {
@@ -115,7 +115,7 @@ class RouteHelper {
      Get.lazyPut(() => OrderController(orderRepo: Get.find()));
     }
 
-    print('✅ OrdersPage dependencies initialized');
+    print(' OrdersPage dependencies initialized');
    }),
   ),
   GetPage(name: checkoutPage, page: () => CheckoutPage()),

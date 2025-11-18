@@ -388,14 +388,14 @@ class WishlistPage extends StatelessWidget {
 // In WishlistPage - Update the _addToCart method
   void _addToCart(SingleProductModel product) {
     try {
-      print('\n🎯 ATTEMPTING TO ADD TO CART FROM WISHLIST:');
+      print('\n ATTEMPTING TO ADD TO CART FROM WISHLIST:');
       print('   Product: ${product.name}');
       print('   Product ID: ${product.id}');
       print('   Stock: ${product.stock}');
 
       // Check if CartController is registered
       if (!Get.isRegistered<CartController>()) {
-        print('❌ CartController not registered!');
+        print(' CartController not registered!');
         Get.snackbar(
           'Error',
           'Cart service not available. Please restart the app.',
@@ -412,7 +412,7 @@ class WishlistPage extends StatelessWidget {
 
       // Check if product is in stock
       if ((product.stock ?? 0) <= 0) {
-        print('❌ Product is out of stock');
+        print(' Product is out of stock');
         Get.snackbar(
           'Out of Stock',
           '${product.name} is currently out of stock',
@@ -422,7 +422,7 @@ class WishlistPage extends StatelessWidget {
         return;
       }
 
-      print('✅ Adding item to cart...');
+      print(' Adding item to cart...');
 
       // Add item to cart
       cartController.addItem(product, 1);
@@ -433,7 +433,7 @@ class WishlistPage extends StatelessWidget {
       });
 
     } catch (e) {
-      print('❌ ERROR in _addToCart: $e');
+      print(' ERROR in _addToCart: $e');
       Get.snackbar(
         'Error',
         'Failed to add item to cart: $e',

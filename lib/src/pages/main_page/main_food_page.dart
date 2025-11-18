@@ -45,7 +45,7 @@ class _MainFoodPageState extends State<MainFoodPage> {
   void initState() {
     super.initState();
 
-    // ✅ Safely initialize authRepo AFTER GetX bindings are ready
+    //  Safely initialize authRepo AFTER GetX bindings are ready
     authRepo = Get.find<AuthenticationRepository>();
 
     _scrollController.addListener(_onScroll);
@@ -225,7 +225,7 @@ class _MainFoodPageState extends State<MainFoodPage> {
           Row(
             children: [
               GetBuilder<WishlistController>(
-                init: WishlistController(), // ✅ Ensure controller exists
+                init: WishlistController(), //  Ensure controller exists
                 builder: (wishlistController) {
                   return GestureDetector(
                     onTap: () => Get.toNamed(RouteHelper.wishlistPage),

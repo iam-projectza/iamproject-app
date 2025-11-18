@@ -35,7 +35,7 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
       // Fetch orders
       orderController.fetchOrders();
     } catch (e) {
-      print('❌ Error getting OrderController: $e');
+      print(' Error getting OrderController: $e');
       // Try to reinitialize if controller is not found
       Get.lazyPut(() => OrderRepo(apiClient: Get.find(), sharedPreferences: Get.find(), ));
       Get.lazyPut(() => OrderController(orderRepo: Get.find()));
@@ -352,7 +352,7 @@ class _OrdersPageState extends State<OrdersPage> with SingleTickerProviderStateM
             // Delivery Address
             if (order.deliveryAddress.isNotEmpty) ...[
               Text(
-                '📍 ${order.deliveryAddress}',
+                ' ${order.deliveryAddress}',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey[600],
